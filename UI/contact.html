@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us — PakTrips</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #0D7C6E; --teal-light: #E1F5EE; --teal-dark: #085041;
+    --amber: #F59E0B; --amber-light: #FEF3C7;
+    --dark: #0F172A; --gray: #64748B; --gray-light: #F1F5F9;
+    --white: #FFFFFF; --border: #E2E8F0; --text: #1E293B;
+    --font-display: 'Sora', sans-serif; --font-body: 'Plus Jakarta Sans', sans-serif;
+  }
+  body { font-family: var(--font-body); color: var(--text); background: var(--white); overflow-x: hidden; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; height: 72px; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--teal); text-decoration: none; }
+  .nav-logo span { color: var(--amber); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a { text-decoration: none; color: var(--gray); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--teal); }
+  .nav-cta { background: var(--teal); color: white; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; font-family: var(--font-display); transition: all 0.2s; }
+  .nav-cta:hover { background: var(--teal-dark); }
+
+  /* PAGE HEADER */
+  .page-header { margin-top: 72px; padding: 80px 5%; background: linear-gradient(135deg, #0a2e2b 0%, #0D7C6E 100%); text-align: center; position: relative; overflow: hidden; }
+  .page-header::after { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E"); }
+  .page-header-content { position: relative; z-index: 2; }
+  .page-eye { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+  .page-title { font-family: var(--font-display); font-size: clamp(32px, 5vw, 56px); font-weight: 700; color: white; letter-spacing: -1px; margin-bottom: 16px; }
+  .page-desc { color: rgba(255,255,255,0.7); font-size: 17px; max-width: 520px; margin: 0 auto; line-height: 1.7; }
+
+  /* MAIN LAYOUT */
+  .contact-section { max-width: 1200px; margin: 80px auto; padding: 0 5%; display: grid; grid-template-columns: 1fr 1.6fr; gap: 64px; align-items: start; }
+
+  /* LEFT INFO */
+  .info-block { display: flex; flex-direction: column; gap: 28px; }
+  .info-card { background: var(--gray-light); border-radius: 16px; padding: 28px; display: flex; gap: 18px; align-items: flex-start; transition: box-shadow 0.2s; }
+  .info-card:hover { box-shadow: 0 8px 28px rgba(13,124,110,0.1); }
+  .info-icon { width: 48px; height: 48px; min-width: 48px; background: var(--teal-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .info-icon svg { width: 22px; height: 22px; stroke: var(--teal); fill: none; stroke-width: 2; }
+  .info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); margin-bottom: 4px; }
+  .info-value { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .info-sub { font-size: 13px; color: var(--gray); }
+
+  .whatsapp-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: white; padding: 16px 24px; border-radius: 12px; text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 15px; transition: all 0.2s; }
+  .whatsapp-btn:hover { background: #1DB954; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,0.35); }
+  .whatsapp-btn svg { width: 22px; height: 22px; fill: white; }
+
+  .hours-card { background: var(--dark); border-radius: 16px; padding: 28px; }
+  .hours-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: white; margin-bottom: 18px; }
+  .hours-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-day { font-size: 13px; color: rgba(255,255,255,0.5); }
+  .hours-time { font-size: 13px; font-weight: 600; color: white; }
+  .hours-time.open { color: #4ade80; }
+
+  /* RIGHT FORM */
+  .form-card { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
+  .form-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .form-sub { color: var(--gray); font-size: 14px; margin-bottom: 32px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+  .form-group.no-mb { margin-bottom: 0; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: 0.3px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: var(--font-body); color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #FAFAFA;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--teal); background: white; box-shadow: 0 0 0 4px rgba(13,124,110,0.08);
+  }
+  .form-group textarea { resize: vertical; min-height: 120px; }
+  .form-group select { appearance: none; cursor: pointer; }
+  .subject-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .subject-chip { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--gray); cursor: pointer; text-align: center; transition: all 0.15s; user-select: none; }
+  .subject-chip:hover, .subject-chip.active { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
+  .subject-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 10px; letter-spacing: 0.3px; }
+  .submit-btn { width: 100%; padding: 15px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; font-family: var(--font-display); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+  .submit-btn:hover { background: var(--teal-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(13,124,110,0.3); }
+  .form-privacy { text-align: center; font-size: 12px; color: var(--gray); margin-top: 14px; }
+  .form-privacy a { color: var(--teal); }
+
+  /* SUCCESS STATE */
+  .success-state { display: none; text-align: center; padding: 40px 20px; }
+  .success-icon { width: 72px; height: 72px; background: var(--teal-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .success-icon svg { width: 32px; height: 32px; stroke: var(--teal); fill: none; stroke-width: 2.5; }
+  .success-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .success-desc { color: var(--gray); font-size: 14px; line-height: 1.7; }
+
+  /* MAP PLACEHOLDER */
+  .map-section { max-width: 1200px; margin: 0 auto 96px; padding: 0 5%; }
+  .map-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+  .map-container { border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+
+  /* FAQ */
+  .faq-section { background: var(--gray-light); padding: 80px 5%; }
+  .faq-inner { max-width: 720px; margin: 0 auto; }
+  .section-eye { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 10px; }
+  .section-title { font-family: var(--font-display); font-size: clamp(26px, 4vw, 36px); font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 40px; }
+  .faq-item { background: white; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .faq-q { padding: 20px 24px; font-family: var(--font-display); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+  .faq-q:hover { background: var(--gray-light); }
+  .faq-q svg { width: 18px; height: 18px; stroke: var(--gray); fill: none; stroke-width: 2; transition: transform 0.3s; flex-shrink: 0; }
+  .faq-a { padding: 0 24px 20px; font-size: 14px; color: var(--gray); line-height: 1.7; display: none; }
+  .faq-item.open .faq-a { display: block; }
+  .faq-item.open .faq-q svg { transform: rotate(45deg); stroke: var(--teal); }
+  .faq-item.open .faq-q { color: var(--teal); }
+
+  footer { background: var(--dark); color: rgba(255,255,255,0.6); padding: 48px 5%; }
+  .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+  .footer-logo { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: white; }
+  .footer-logo span { color: var(--amber); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="home.html" class="nav-logo">Pak<span>Trips</span></a>
+  <ul class="nav-links">
+    <li><a href="home.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html" class="active">Contact</a></li>
+  </ul>
+  <a href="design-trip.html" class="nav-cta">Design My Trip →</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-content">
+    <div class="page-eye">Get in Touch</div>
+    <h1 class="page-title">We're here to help</h1>
+    <p class="page-desc">Have a question about a package or need help planning? Our team responds within 2 hours during business hours.</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="contact-section">
+  <!-- LEFT -->
+  <div class="info-block">
+    <div class="info-card">
+      <div class="info-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      </div>
+      <div>
+        <div class="info-label">Phone</div>
+        <div class="info-value">+92 300 1234567</div>
+        <div class="info-sub">Mon–Sat, 9am – 8pm PKT</div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div>
+        <div class="info-label">Email</div>
+        <div class="info-value">info@paktrips.pk</div>
+        <div class="info-sub">We reply within 2 hours</div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </div>
+      <div>
+        <div class="info-label">Office</div>
+        <div class="info-value">F-7 Markaz, Islamabad</div>
+        <div class="info-sub">Open for walk-ins Mon–Sat</div>
+      </div>
+    </div>
+
+    <a href="https://wa.me/923001234567" class="whatsapp-btn">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Chat on WhatsApp
+    </a>
+
+    <div class="hours-card">
+      <div class="hours-title">⏰ Office Hours</div>
+      <div class="hours-row"><span class="hours-day">Monday – Friday</span><span class="hours-time open">9:00 AM – 8:00 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Saturday</span><span class="hours-time open">10:00 AM – 6:00 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Sunday</span><span class="hours-time">Closed</span></div>
+      <div class="hours-row"><span class="hours-day">Public Holidays</span><span class="hours-time">WhatsApp Only</span></div>
+    </div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="form-card">
+    <div id="form-content">
+      <div class="form-title">Send us a message</div>
+      <div class="form-sub">Fill out the form and our team will get back to you within 2 hours.</div>
+
+      <div class="subject-label">What's this about?</div>
+      <div class="subject-grid">
+        <div class="subject-chip active" onclick="selectChip(this)">Trip Planning</div>
+        <div class="subject-chip" onclick="selectChip(this)">Booking Help</div>
+        <div class="subject-chip" onclick="selectChip(this)">Hotel Query</div>
+        <div class="subject-chip" onclick="selectChip(this)">Pricing</div>
+        <div class="subject-chip" onclick="selectChip(this)">Group Tour</div>
+        <div class="subject-chip" onclick="selectChip(this)">Other</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group no-mb">
+          <label>First Name</label>
+          <input type="text" placeholder="Ahmed">
+        </div>
+        <div class="form-group no-mb">
+          <label>Last Name</label>
+          <input type="text" placeholder="Khan">
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top:18px;">
+        <div class="form-group no-mb">
+          <label>Email Address</label>
+          <input type="email" placeholder="ahmed@email.com">
+        </div>
+        <div class="form-group no-mb">
+          <label>Phone / WhatsApp</label>
+          <input type="tel" placeholder="+92 300 0000000">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:18px;">
+        <label>Destination of Interest</label>
+        <select>
+          <option value="">Select destination...</option>
+          <option>Hunza Valley</option>
+          <option>Skardu</option>
+          <option>Naran & Kaghan</option>
+          <option>Astore</option>
+          <option>Deosai Plains</option>
+          <option>Minimarg</option>
+          <option>Not sure yet</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Your Message</label>
+        <textarea placeholder="Tell us about your trip idea, dates, group size, or any questions you have..."></textarea>
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send Message
+      </button>
+      <div class="form-privacy">By submitting, you agree to our <a href="#">Privacy Policy</a>. We never share your data.</div>
+    </div>
+
+    <div class="success-state" id="success-state">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">Message sent! 🎉</div>
+      <div class="success-desc">Thank you for reaching out. Our team will get back to you within 2 hours during business hours.<br><br>In the meantime, you can also <strong>WhatsApp us</strong> for faster responses.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="map-section">
+  <div class="map-title">📍 Find our office</div>
+  <div class="map-container">
+    <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+      <rect width="1200" height="400" fill="#E8F0E8"/>
+      <!-- Grid roads -->
+      <line x1="0" y1="133" x2="1200" y2="133" stroke="white" stroke-width="18"/>
+      <line x1="0" y1="266" x2="1200" y2="266" stroke="white" stroke-width="18"/>
+      <line x1="200" y1="0" x2="200" y2="400" stroke="white" stroke-width="14"/>
+      <line x1="450" y1="0" x2="450" y2="400" stroke="white" stroke-width="14"/>
+      <line x1="700" y1="0" x2="700" y2="400" stroke="white" stroke-width="18"/>
+      <line x1="950" y1="0" x2="950" y2="400" stroke="white" stroke-width="14"/>
+      <!-- Blocks -->
+      <rect x="210" y="10" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="210" y="143" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="460" y="10" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="460" y="143" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="460" y="276" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="710" y="10" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="710" y="143" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="960" y="10" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <rect x="960" y="143" width="230" height="113" rx="6" fill="#D5E8D5"/>
+      <!-- Park -->
+      <rect x="210" y="276" width="230" height="113" rx="6" fill="#C8E6C8"/>
+      <ellipse cx="265" cy="330" rx="22" ry="22" fill="#A8D8A8"/>
+      <ellipse cx="310" cy="315" rx="18" ry="18" fill="#90C890"/>
+      <ellipse cx="355" cy="335" rx="20" ry="20" fill="#A8D8A8"/>
+      <text x="283" y="372" font-size="11" fill="#4a8a4a" text-anchor="middle" font-family="sans-serif">F-7 Park</text>
+      <!-- Pin -->
+      <circle cx="700" cy="200" r="24" fill="var(--teal, #0D7C6E)" opacity="0.2"/>
+      <circle cx="700" cy="200" r="16" fill="var(--teal, #0D7C6E)"/>
+      <circle cx="700" cy="200" r="6" fill="white"/>
+      <rect x="620" y="140" width="160" height="42" rx="8" fill="white" filter="url(#shadow)"/>
+      <text x="700" y="157" font-size="11" font-weight="bold" fill="#0D7C6E" text-anchor="middle" font-family="sans-serif">PakTrips Office</text>
+      <text x="700" y="173" font-size="10" fill="#64748B" text-anchor="middle" font-family="sans-serif">F-7 Markaz, Islamabad</text>
+      <!-- Labels -->
+      <text x="325" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">Jinnah Super</text>
+      <text x="575" y="100" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">F-6 Markaz</text>
+      <text x="700" y="320" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">F-7 Markaz</text>
+      <text x="825" y="100" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">F-8 Markaz</text>
+    </svg>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="faq-inner">
+    <div class="section-eye">FAQ</div>
+    <h2 class="section-title">Frequently Asked Questions</h2>
+
+    <div class="faq-item open">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        How far in advance should I book?
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a">We recommend booking at least 3–4 weeks in advance, especially for peak season (June–August). Some popular packages like Hunza and Deosai fill up 6–8 weeks ahead. You can also enquire with us for last-minute availability.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can I customize the package after booking?
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a">Yes! You can change hotels, room types, and vehicles anytime before departure through your trip page. Our team will confirm availability and update your total price accordingly — no penalties for changes.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Is the price per person or for the group?
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a">All prices listed on the platform are per person, based on the number of travelers you enter. The total at checkout reflects the full group cost. Hotel rooms are shared between travelers in your group to keep costs down.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What is your cancellation policy?
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a">Cancellations made 14+ days before departure receive a full refund. 7–14 days: 50% refund. Less than 7 days: no refund, but we can reschedule your trip at no charge. Weather cancellations are always fully refundable.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Do you arrange flights or just road trips?
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a">All our packages are road trip based, departing from Islamabad. We can assist with domestic flight bookings (ISB–SKT for Skardu) as an add-on for an additional fee. Contact us to discuss flight-based options.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">Pak<span>Trips</span></div>
+    <div style="font-size:13px;">© 2026 PakTrips. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+  function selectChip(el) {
+    document.querySelectorAll('.subject-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  }
+  function submitForm() {
+    document.getElementById('form-content').style.display = 'none';
+    document.getElementById('success-state').style.display = 'block';
+  }
+</script>
+</body>
+</html>

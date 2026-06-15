@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — PakTrips</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #0D7C6E; --teal-light: #E1F5EE; --teal-dark: #085041;
+    --amber: #F59E0B; --amber-light: #FEF3C7;
+    --dark: #0F172A; --gray: #64748B; --gray-light: #F1F5F9;
+    --white: #FFFFFF; --border: #E2E8F0; --text: #1E293B;
+    --font-display: 'Sora', sans-serif; --font-body: 'Plus Jakarta Sans', sans-serif;
+  }
+  body { font-family: var(--font-body); color: var(--text); background: var(--white); overflow-x: hidden; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; height: 72px; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--teal); text-decoration: none; }
+  .nav-logo span { color: var(--amber); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a { text-decoration: none; color: var(--gray); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--teal); }
+  .nav-cta { background: var(--teal); color: white; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; font-family: var(--font-display); transition: all 0.2s; }
+  .nav-cta:hover { background: var(--teal-dark); }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-top: 72px; padding: 80px 5%;
+    background: linear-gradient(135deg, #0a2e2b 0%, #0D7C6E 100%);
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .page-header::after { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E"); }
+  .page-header-content { position: relative; z-index: 2; }
+  .page-eye { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+  .page-title { font-family: var(--font-display); font-size: clamp(32px, 5vw, 56px); font-weight: 700; color: white; letter-spacing: -1px; margin-bottom: 16px; }
+  .page-desc { color: rgba(255,255,255,0.7); font-size: 17px; max-width: 560px; margin: 0 auto; line-height: 1.7; }
+
+  /* STORY */
+  .story-section { max-width: 1200px; margin: 96px auto; padding: 0 5%; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .story-eye { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .story-title { font-family: var(--font-display); font-size: clamp(28px, 4vw, 42px); font-weight: 700; letter-spacing: -0.8px; margin-bottom: 20px; line-height: 1.15; }
+  .story-body { color: var(--gray); font-size: 15px; line-height: 1.8; margin-bottom: 16px; }
+  .story-signature { display: flex; align-items: center; gap: 14px; margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .sig-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; color: white; font-size: 16px; }
+  .sig-name { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+  .sig-role { font-size: 12px; color: var(--gray); }
+
+  .story-visual { position: relative; }
+  .story-img-main { width: 100%; border-radius: 20px; overflow: hidden; }
+  .story-img-badge { position: absolute; bottom: -20px; right: -20px; background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+  .badge-num { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--teal); }
+  .badge-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  /* STATS */
+  .stats-section { background: var(--dark); padding: 80px 5%; }
+  .stats-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .stat-card { text-align: center; padding: 32px 20px; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
+  .stat-num { font-family: var(--font-display); font-size: 44px; font-weight: 700; color: var(--amber); margin-bottom: 6px; }
+  .stat-label { color: rgba(255,255,255,0.5); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* TEAM */
+  .team-section { max-width: 1200px; margin: 96px auto 0; padding: 0 5%; }
+  .section-eye { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 10px; }
+  .section-title { font-family: var(--font-display); font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: var(--text); letter-spacing: -0.8px; margin-bottom: 14px; }
+  .section-sub { color: var(--gray); font-size: 16px; max-width: 520px; line-height: 1.7; }
+  .section-header { margin-bottom: 52px; }
+
+  .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .team-card { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; transition: transform 0.25s, box-shadow 0.25s; }
+  .team-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(13,124,110,0.1); }
+  .team-avatar { height: 200px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 48px; font-weight: 700; color: white; }
+  .team-body { padding: 18px; }
+  .team-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .team-role { font-size: 12px; color: var(--teal); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .team-desc { font-size: 12px; color: var(--gray); line-height: 1.6; }
+
+  /* VALUES */
+  .values-section { background: var(--gray-light); margin: 96px 5% 0; border-radius: 24px; padding: 72px 64px; max-width: 1200px; margin-left: auto; margin-right: auto; margin-top: 96px; }
+  .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 52px; }
+  .value-item { }
+  .value-num { font-family: var(--font-display); font-size: 42px; font-weight: 700; color: var(--teal); opacity: 0.15; line-height: 1; margin-bottom: 8px; }
+  .value-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+  .value-desc { font-size: 14px; color: var(--gray); line-height: 1.7; }
+
+  /* GALLERY */
+  .gallery-section { max-width: 1200px; margin: 96px auto; padding: 0 5%; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 160px); gap: 16px; margin-top: 40px; }
+  .gallery-cell { border-radius: 12px; overflow: hidden; }
+  .gallery-cell:first-child { grid-column: span 2; grid-row: span 2; }
+  .gallery-cell svg { width: 100%; height: 100%; display: block; }
+
+  /* CTA */
+  .cta-strip { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%); padding: 72px 5%; display: flex; align-items: center; justify-content: space-between; gap: 40px; max-width: 1200px; margin: 0 auto 96px; border-radius: 24px; }
+  .cta-title { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: white; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .cta-sub { color: rgba(255,255,255,0.7); font-size: 15px; }
+  .cta-btn { background: var(--amber); color: var(--dark); padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; font-family: var(--font-display); white-space: nowrap; transition: all 0.2s; }
+  .cta-btn:hover { background: #E08B06; transform: translateY(-2px); }
+
+  footer { background: var(--dark); color: rgba(255,255,255,0.6); padding: 48px 5%; }
+  .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+  .footer-logo { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: white; }
+  .footer-logo span { color: var(--amber); }
+  .footer-copy { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="home.html" class="nav-logo">Pak<span>Trips</span></a>
+  <ul class="nav-links">
+    <li><a href="home.html">Home</a></li>
+    <li><a href="about.html" class="active">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <a href="design-trip.html" class="nav-cta">Design My Trip →</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-content">
+    <div class="page-eye">Our Story</div>
+    <h1 class="page-title">Born from a love of the North</h1>
+    <p class="page-desc">We started PakTrips because we believe Pakistan's mountains deserve to be experienced by every Pakistani — not just those with connections.</p>
+  </div>
+</div>
+
+<!-- STORY -->
+<div class="story-section">
+  <div>
+    <div class="story-eye">Who We Are</div>
+    <h2 class="story-title">Pakistan's mountains are our home</h2>
+    <p class="story-body">PakTrips was founded in 2019 by a group of Islamabad-based travelers who were frustrated by how hard it was to plan a proper northern Pakistan trip without knowing the right people. Hotels were unreliable, guides were unvetted, and every trip felt like a gamble.</p>
+    <p class="story-body">We built a platform that puts the entire planning process in your hands — curated, transparent, and fully customizable — while our local team handles everything on the ground.</p>
+    <p class="story-body">Today, we've helped over 2,400 families and groups explore Hunza, Skardu, Astore, Deosai, and beyond. Every package is personally verified by our team before it goes live.</p>
+    <div class="story-signature">
+      <div class="sig-avatar">ZA</div>
+      <div><div class="sig-name">Zaid Amir</div><div class="sig-role">Founder & CEO, PakTrips</div></div>
+    </div>
+  </div>
+  <div class="story-visual">
+    <div class="story-img-main">
+      <svg viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+        <defs>
+          <linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0D4E4A"/>
+            <stop offset="100%" stop-color="#0D7C6E"/>
+          </linearGradient>
+        </defs>
+        <rect width="500" height="380" fill="url(#sg1)"/>
+        <ellipse cx="80" cy="60" rx="50" ry="28" fill="white" opacity="0.15"/>
+        <ellipse cx="380" cy="40" rx="70" ry="35" fill="white" opacity="0.1"/>
+        <polygon points="0,380 80,200 160,280 260,120 360,230 450,150 500,200 500,380" fill="#085041"/>
+        <polygon points="220,120 260,120 290,220 190,220" fill="white" opacity="0.7"/>
+        <polygon points="400,150 450,150 470,230 380,230" fill="white" opacity="0.5"/>
+        <polygon points="50,200 90,200 110,280 30,280" fill="white" opacity="0.35"/>
+        <rect y="330" width="500" height="50" fill="#04342C"/>
+        <ellipse cx="250" cy="330" rx="150" ry="30" fill="#1a6b8a" opacity="0.35"/>
+        <circle cx="420" cy="55" rx="28" ry="28" fill="none" stroke="white" stroke-width="1" opacity="0.2"/>
+        <text x="250" y="370" text-anchor="middle" fill="white" opacity="0.25" font-size="11" font-family="sans-serif">Hunza Valley, Gilgit-Baltistan</text>
+      </svg>
+    </div>
+    <div class="story-img-badge">
+      <div class="badge-num">2019</div>
+      <div class="badge-label">Founded in Islamabad</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-section">
+  <div class="stats-inner">
+    <div class="stat-card">
+      <div class="stat-num">2,400+</div>
+      <div class="stat-label">Trips Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">38</div>
+      <div class="stat-label">Destinations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">96%</div>
+      <div class="stat-label">Satisfaction Rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">120+</div>
+      <div class="stat-label">Partner Hotels</div>
+    </div>
+  </div>
+</div>
+
+<!-- TEAM -->
+<div class="team-section" style="margin-top:96px;">
+  <div class="section-header">
+    <div class="section-eye">The Team</div>
+    <h2 class="section-title">People behind your journey</h2>
+    <p class="section-sub">Local experts, experienced guides, and passionate travelers who know northern Pakistan like the back of their hand.</p>
+  </div>
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="team-avatar" style="background: linear-gradient(135deg,#0D7C6E,#085041)">ZA</div>
+      <div class="team-body">
+        <div class="team-name">Zaid Amir</div>
+        <div class="team-role">Founder & CEO</div>
+        <div class="team-desc">Hiked K2 base camp 4 times. Built PakTrips after his 7th northern trip in 2019.</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar" style="background: linear-gradient(135deg,#1A6B8A,#0D4E6A)">NB</div>
+      <div class="team-body">
+        <div class="team-name">Nadia Baig</div>
+        <div class="team-role">Head of Operations</div>
+        <div class="team-desc">Ex-PTDC. Manages all hotel partnerships and ground operations across Gilgit-Baltistan.</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar" style="background: linear-gradient(135deg,#7D3C98,#5B2C6F)">AH</div>
+      <div class="team-body">
+        <div class="team-name">Asif Hussain</div>
+        <div class="team-role">Lead Mountain Guide</div>
+        <div class="team-desc">15 years guiding treks in Karakoram. Speaks Shina, Balti, and English fluently.</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar" style="background: linear-gradient(135deg,#D35400,#A04000)">SR</div>
+      <div class="team-body">
+        <div class="team-name">Sana Rehman</div>
+        <div class="team-role">Customer Experience</div>
+        <div class="team-desc">Makes sure every traveler feels supported before, during, and after their trip.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VALUES -->
+<div class="values-section">
+  <div class="section-eye">Our Values</div>
+  <h2 class="section-title">What we stand for</h2>
+  <div class="values-grid">
+    <div class="value-item">
+      <div class="value-num">01</div>
+      <div class="value-title">Transparency above all</div>
+      <div class="value-desc">Every price is final. No hidden charges, no surprise fees. You see exactly what you pay for before you book.</div>
+    </div>
+    <div class="value-item">
+      <div class="value-num">02</div>
+      <div class="value-title">Local-first approach</div>
+      <div class="value-desc">We hire locally, partner with community-owned hotels, and ensure your money stays in northern Pakistan.</div>
+    </div>
+    <div class="value-item">
+      <div class="value-num">03</div>
+      <div class="value-title">Safety without compromise</div>
+      <div class="value-desc">Every route, hotel, and operator we work with is personally inspected by our team at least twice a year.</div>
+    </div>
+    <div class="value-item">
+      <div class="value-num">04</div>
+      <div class="value-title">Flexibility built in</div>
+      <div class="value-desc">Your trip, your choices. Change hotels, vehicles, or room types anytime — no penalties, no friction.</div>
+    </div>
+    <div class="value-item">
+      <div class="value-num">05</div>
+      <div class="value-title">Responsible tourism</div>
+      <div class="value-desc">We support leave-no-trace principles and work with local conservation groups across all destinations.</div>
+    </div>
+    <div class="value-item">
+      <div class="value-num">06</div>
+      <div class="value-title">Relentless improvement</div>
+      <div class="value-desc">We read every review, visit every hotel, and update our itineraries every season based on real traveler feedback.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div style="padding: 0 5%; max-width: 1200px; margin: 96px auto;">
+  <div class="cta-strip">
+    <div>
+      <div class="cta-title">Let's plan your trip together</div>
+      <div class="cta-sub">Design a custom itinerary in minutes. No calls required.</div>
+    </div>
+    <a href="design-trip.html" class="cta-btn">Design My Trip →</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">Pak<span>Trips</span></div>
+    <div class="footer-copy">© 2026 PakTrips. All rights reserved.</div>
+  </div>
+</footer>
+
+</body>
+</html>

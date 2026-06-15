@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PakTrips — Explore Pakistan's North</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #0D7C6E;
+    --teal-light: #E1F5EE;
+    --teal-dark: #085041;
+    --amber: #F59E0B;
+    --amber-light: #FEF3C7;
+    --dark: #0F172A;
+    --gray: #64748B;
+    --gray-light: #F1F5F9;
+    --white: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --font-display: 'Sora', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+  }
+  body { font-family: var(--font-body); color: var(--text); background: var(--white); overflow-x: hidden; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%; height: 72px;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--teal); text-decoration: none; letter-spacing: -0.5px; }
+  .nav-logo span { color: var(--amber); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a { text-decoration: none; color: var(--gray); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--teal); }
+  .nav-links a.active { color: var(--teal); }
+  .nav-cta {
+    background: var(--teal); color: white; padding: 10px 22px; border-radius: 8px;
+    text-decoration: none; font-size: 14px; font-weight: 600; font-family: var(--font-display);
+    transition: background 0.2s, transform 0.15s;
+  }
+  .nav-cta:hover { background: var(--teal-dark); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center;
+    background: linear-gradient(135deg, #0a2e2b 0%, #0D7C6E 50%, #1a4a3a 100%);
+    position: relative; overflow: hidden; padding-top: 72px;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-mountain {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 55%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.04)' d='M0 320L60 266.7C120 213 240 107 360 85.3C480 64 600 128 720 160C840 192 960 192 1080 181.3C1200 171 1320 149 1380 138.7L1440 128V320H0Z'/%3E%3Cpath fill='rgba(255,255,255,0.06)' d='M0 320L80 288C160 256 320 192 480 176C640 160 800 192 960 197.3C1120 203 1280 181 1360 170.7L1440 160V320H0Z'/%3E%3C/svg%3E") no-repeat bottom/cover;
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 80px 5%; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; width: 100%; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--amber); padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px; }
+  .hero-title { font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px); font-weight: 700; color: white; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px; }
+  .hero-title span { color: var(--amber); }
+  .hero-desc { color: rgba(255,255,255,0.7); font-size: 17px; line-height: 1.7; margin-bottom: 36px; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn-primary { background: var(--amber); color: var(--dark); padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; font-family: var(--font-display); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-primary:hover { background: #E08B06; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,0.35); }
+  .btn-outline { border: 1.5px solid rgba(255,255,255,0.3); color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 15px; transition: all 0.2s; }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  .hero-stats { display: flex; gap: 32px; margin-top: 48px; }
+  .hero-stat { }
+  .hero-stat-num { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: white; }
+  .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Search bar */
+  .search-card { background: white; border-radius: 16px; padding: 28px 32px; box-shadow: 0 24px 48px rgba(0,0,0,0.2); }
+  .search-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 20px; }
+  .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group select, .form-group input {
+    padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: var(--font-body); color: var(--text);
+    outline: none; transition: border-color 0.2s; background: white; appearance: none; cursor: pointer;
+  }
+  .form-group select:focus, .form-group input:focus { border-color: var(--teal); }
+  .search-btn {
+    width: 100%; margin-top: 6px; padding: 14px; background: var(--teal); color: white;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 700; font-family: var(--font-display);
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .search-btn:hover { background: var(--teal-dark); transform: translateY(-1px); }
+
+  /* PACKAGES */
+  section { padding: 96px 5%; max-width: 1200px; margin: 0 auto; }
+  .section-eye { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 10px; }
+  .section-title { font-family: var(--font-display); font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: var(--text); letter-spacing: -0.8px; margin-bottom: 14px; }
+  .section-sub { color: var(--gray); font-size: 16px; max-width: 520px; line-height: 1.7; }
+  .section-header { margin-bottom: 52px; }
+  .section-header-row { display: flex; align-items: flex-end; justify-content: space-between; }
+  .view-all { color: var(--teal); text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+  .packages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .pkg-card { background: white; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; }
+  .pkg-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(13,124,110,0.12); }
+  .pkg-img { height: 200px; position: relative; overflow: hidden; }
+  .pkg-img-bg { width: 100%; height: 100%; object-fit: cover; background: var(--teal); display: flex; align-items: center; justify-content: center; }
+  .pkg-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.7), transparent 60%); }
+  .pkg-badge { position: absolute; top: 14px; left: 14px; background: var(--amber); color: var(--dark); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .pkg-days { position: absolute; bottom: 14px; left: 14px; color: white; font-size: 13px; font-weight: 500; }
+  .pkg-body { padding: 20px; }
+  .pkg-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .pkg-route { font-size: 13px; color: var(--gray); margin-bottom: 14px; display: flex; align-items: center; gap: 4px; }
+  .pkg-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tag { background: var(--teal-light); color: var(--teal-dark); padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+  .pkg-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); }
+  .pkg-price-label { font-size: 11px; color: var(--gray); }
+  .pkg-price { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--teal); }
+  .pkg-price span { font-size: 12px; font-weight: 400; color: var(--gray); }
+  .pkg-btn { background: var(--teal-light); color: var(--teal-dark); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; }
+  .pkg-btn:hover { background: var(--teal); color: white; }
+
+  /* Package image placeholders with SVG mountain scenes */
+  .pkg-scene { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+  /* WHY US */
+  .why-section { background: var(--gray-light); border-radius: 24px; padding: 64px; margin: 0 5% 96px; max-width: 1200px; margin-left: auto; margin-right: auto; margin-bottom: 0; }
+  .why-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin-top: 52px; }
+  .why-card { text-align: center; }
+  .why-icon { width: 56px; height: 56px; background: var(--teal-light); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .why-icon svg { width: 26px; height: 26px; stroke: var(--teal); fill: none; stroke-width: 2; }
+  .why-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .why-desc { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+  /* DESTINATIONS */
+  .dest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .dest-card { border-radius: 14px; overflow: hidden; position: relative; height: 220px; cursor: pointer; }
+  .dest-card:first-child { grid-column: span 2; height: 260px; }
+  .dest-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.75), transparent 50%); transition: opacity 0.3s; }
+  .dest-card:hover .dest-overlay { opacity: 0.9; }
+  .dest-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 18px; }
+  .dest-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: white; }
+  .dest-count { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .dest-bg { width: 100%; height: 100%; transition: transform 0.4s; }
+  .dest-card:hover .dest-bg { transform: scale(1.06); }
+
+  /* TESTIMONIALS */
+  .testi-section { background: var(--dark); color: white; padding: 96px 5%; }
+  .testi-inner { max-width: 1200px; margin: 0 auto; }
+  .testi-section .section-eye { color: var(--amber); }
+  .testi-section .section-title { color: white; }
+  .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 52px; }
+  .testi-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; }
+  .testi-stars { color: var(--amber); font-size: 14px; margin-bottom: 14px; letter-spacing: 2px; }
+  .testi-text { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.7; margin-bottom: 20px; }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: white; }
+  .testi-name { font-weight: 600; font-size: 14px; }
+  .testi-loc { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  /* CTA BANNER */
+  .cta-banner { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%); border-radius: 24px; padding: 72px 64px; display: flex; align-items: center; justify-content: space-between; gap: 40px; margin: 96px 5%; max-width: 1200px; margin-left: auto; margin-right: auto; }
+  .cta-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: white; letter-spacing: -0.8px; margin-bottom: 10px; }
+  .cta-sub { color: rgba(255,255,255,0.7); font-size: 16px; }
+  .cta-btn { background: var(--amber); color: var(--dark); padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 16px; font-family: var(--font-display); white-space: nowrap; transition: all 0.2s; }
+  .cta-btn:hover { background: #E08B06; transform: translateY(-2px); }
+
+  /* FOOTER */
+  footer { background: var(--dark); color: rgba(255,255,255,0.6); padding: 64px 5% 32px; }
+  .footer-inner { max-width: 1200px; margin: 0 auto; }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+  .footer-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: white; margin-bottom: 12px; }
+  .footer-logo span { color: var(--amber); }
+  .footer-desc { font-size: 13px; line-height: 1.7; margin-bottom: 20px; }
+  .footer-col-title { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: white; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--amber); }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 24px; display: flex; justify-content: space-between; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="home.html" class="nav-logo">Pak<span>Trips</span></a>
+  <ul class="nav-links">
+    <li><a href="home.html" class="active">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <a href="design-trip.html" class="nav-cta">Design My Trip →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-mountain"></div>
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Pakistan's Northern Wonders
+      </div>
+      <h1 class="hero-title">Discover the <span>Roof of the World</span></h1>
+      <p class="hero-desc">Curated, all-inclusive trips to Hunza, Skardu, Naran, Astore and beyond — from Islamabad to the highest mountain ranges on earth.</p>
+      <div class="hero-actions">
+        <a href="design-trip.html" class="btn-primary">Design My Trip <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+        <a href="about.html" class="btn-outline">View Packages</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-num">2,400+</div><div class="hero-stat-label">Trips Completed</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">38</div><div class="hero-stat-label">Destinations</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">4.9★</div><div class="hero-stat-label">Average Rating</div></div>
+      </div>
+    </div>
+    <div class="search-card">
+      <div class="search-title">Plan Your Journey</div>
+      <div class="search-grid">
+        <div class="form-group">
+          <label>From</label>
+          <select><option>Islamabad</option><option>Lahore</option><option>Karachi</option><option>Peshawar</option></select>
+        </div>
+        <div class="form-group">
+          <label>Destination</label>
+          <select><option>Hunza Valley</option><option>Skardu</option><option>Naran</option><option>Astore</option><option>Deosai</option></select>
+        </div>
+        <div class="form-group">
+          <label>Departure Date</label>
+          <input type="date" value="2026-06-15">
+        </div>
+        <div class="form-group">
+          <label>Persons</label>
+          <select><option>2 Adults</option><option>3 Adults</option><option>4 Adults</option><option>5+ Adults</option></select>
+        </div>
+        <div class="form-group full">
+          <label>Duration</label>
+          <select><option>5 Days / 4 Nights</option><option>7 Days / 6 Nights</option><option>10 Days / 9 Nights</option><option>14 Days / 13 Nights</option></select>
+        </div>
+      </div>
+      <button class="search-btn">Search Available Packages <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PACKAGES -->
+<div style="padding: 96px 5% 0; max-width: 1200px; margin: 0 auto;">
+  <div class="section-header">
+    <div class="section-header-row">
+      <div>
+        <div class="section-eye">Popular Packages</div>
+        <h2 class="section-title">Handpicked Journeys</h2>
+        <p class="section-sub">Every package is curated by our local experts with hotels, transport and daily itineraries included.</p>
+      </div>
+      <a href="#" class="view-all">View all packages →</a>
+    </div>
+  </div>
+  <div class="packages-grid">
+
+    <div class="pkg-card">
+      <div class="pkg-img">
+        <svg class="pkg-scene" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="sky1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1B4F72"/><stop offset="100%" stop-color="#85C1E9"/></linearGradient></defs>
+          <rect width="400" height="200" fill="url(#sky1)"/>
+          <ellipse cx="60" cy="40" rx="30" ry="18" fill="white" opacity="0.3"/>
+          <ellipse cx="120" cy="30" rx="40" ry="22" fill="white" opacity="0.25"/>
+          <polygon points="0,180 60,80 120,140 200,60 270,120 340,70 400,110 400,200 0,200" fill="#1A5276"/>
+          <polygon points="140,180 200,60 260,180" fill="#1F618D"/>
+          <polygon points="280,180 340,70 400,120 400,180" fill="#154360"/>
+          <polygon points="200,60 230,120 170,120" fill="white" opacity="0.5"/>
+          <rect y="170" width="400" height="30" fill="#0A3D2E"/>
+          <rect y="185" width="400" height="15" fill="#0D5040" opacity="0.6"/>
+        </svg>
+        <div class="pkg-gradient"></div>
+        <div class="pkg-badge">BESTSELLER</div>
+        <div class="pkg-days">📅 7 Days · 6 Nights</div>
+      </div>
+      <div class="pkg-body">
+        <div class="pkg-title">Astore · Minimarg · Deosai</div>
+        <div class="pkg-route">📍 Islamabad → Astore → Deosai Plains</div>
+        <div class="pkg-tags">
+          <span class="tag">4×4 SUV</span>
+          <span class="tag">Hotels</span>
+          <span class="tag">Guide</span>
+        </div>
+        <div class="pkg-footer">
+          <div><div class="pkg-price-label">Per person</div><div class="pkg-price">PKR 71,871 <span>/ person</span></div></div>
+          <button class="pkg-btn">Book Now</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-img">
+        <svg class="pkg-scene" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0B3D36"/><stop offset="100%" stop-color="#1abc9c"/></linearGradient></defs>
+          <rect width="400" height="200" fill="url(#sky2)"/>
+          <ellipse cx="300" cy="35" rx="50" ry="28" fill="white" opacity="0.2"/>
+          <polygon points="0,200 80,90 160,160 250,50 330,120 400,80 400,200" fill="#0A5041"/>
+          <polygon points="200,50 240,130 160,130" fill="white" opacity="0.6"/>
+          <polygon points="330,80 360,140 300,140" fill="white" opacity="0.4"/>
+          <rect y="175" width="400" height="25" fill="#1B6B54" opacity="0.8"/>
+          <ellipse cx="200" cy="165" rx="80" ry="20" fill="#2196a8" opacity="0.5"/>
+        </svg>
+        <div class="pkg-gradient"></div>
+        <div class="pkg-badge" style="background:#0D7C6E;color:white;">POPULAR</div>
+        <div class="pkg-days">📅 10 Days · 9 Nights</div>
+      </div>
+      <div class="pkg-body">
+        <div class="pkg-title">Hunza · Khunjerab · Gilgit</div>
+        <div class="pkg-route">📍 Islamabad → Hunza → Khunjerab Pass</div>
+        <div class="pkg-tags">
+          <span class="tag">Land Cruiser</span>
+          <span class="tag">4-Star Hotels</span>
+          <span class="tag">Meals</span>
+        </div>
+        <div class="pkg-footer">
+          <div><div class="pkg-price-label">Per person</div><div class="pkg-price">PKR 95,000 <span>/ person</span></div></div>
+          <button class="pkg-btn">Book Now</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-img">
+        <svg class="pkg-scene" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2C3E50"/><stop offset="100%" stop-color="#BDC3C7"/></linearGradient></defs>
+          <rect width="400" height="200" fill="url(#sky3)"/>
+          <polygon points="0,200 100,70 200,130 300,40 400,100 400,200" fill="#5D6D7E"/>
+          <polygon points="260,40 300,40 330,100 250,100" fill="white" opacity="0.7"/>
+          <polygon points="80,70 120,70 140,130 60,130" fill="white" opacity="0.5"/>
+          <rect y="168" width="400" height="32" fill="#1A252F"/>
+          <rect y="175" width="400" height="25" fill="#0D6B8E" opacity="0.4"/>
+        </svg>
+        <div class="pkg-gradient"></div>
+        <div class="pkg-badge" style="background:#7D3C98;color:white;">PREMIUM</div>
+        <div class="pkg-days">📅 14 Days · 13 Nights</div>
+      </div>
+      <div class="pkg-body">
+        <div class="pkg-title">Skardu · K2 Base Camp</div>
+        <div class="pkg-route">📍 Islamabad → Skardu → Concordia</div>
+        <div class="pkg-tags">
+          <span class="tag">Coaster</span>
+          <span class="tag">Camping</span>
+          <span class="tag">Trekking</span>
+        </div>
+        <div class="pkg-footer">
+          <div><div class="pkg-price-label">Per person</div><div class="pkg-price">PKR 148,000 <span>/ person</span></div></div>
+          <button class="pkg-btn">Book Now</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WHY US -->
+<div style="padding: 96px 5%; max-width: 1200px; margin: 0 auto;">
+  <div class="why-section">
+    <div class="section-eye">Why PakTrips</div>
+    <h2 class="section-title">Travel with confidence</h2>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="why-title">100% Safe & Verified</div>
+        <div class="why-desc">All hotels and operators are personally verified by our team for quality and safety standards.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="why-title">24/7 Support</div>
+        <div class="why-desc">Our local guides and support team are available around the clock throughout your journey.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="why-title">Best Price Guarantee</div>
+        <div class="why-desc">We match any lower price you find. Transparent pricing — no hidden fees, ever.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="why-title">Flexible Bookings</div>
+        <div class="why-desc">Change hotels, vehicles, or room types anytime before departure at no extra charge.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div class="testi-section">
+  <div class="testi-inner">
+    <div class="section-eye">Traveler Reviews</div>
+    <h2 class="section-title">What our travelers say</h2>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"The Astore trip was beyond our expectations. Every hotel, every route, every stopover was perfectly organized. We felt completely looked after from day one."</div>
+        <div class="testi-author"><div class="testi-avatar">AK</div><div><div class="testi-name">Ahmed Khalid</div><div class="testi-loc">Lahore, Pakistan</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Being able to customize the hotel and car right on the itinerary page was a game changer. We switched to a Land Cruiser last minute and it was seamless."</div>
+        <div class="testi-author"><div class="testi-avatar">SR</div><div><div class="testi-name">Sara Raza</div><div class="testi-loc">Karachi, Pakistan</div></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Third time booking with PakTrips. The Hunza package this year was their best yet. Incredible value and the local guides are absolutely brilliant people."</div>
+        <div class="testi-author"><div class="testi-avatar">FA</div><div><div class="testi-name">Faizan Ali</div><div class="testi-loc">Islamabad, Pakistan</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA BANNER -->
+<div class="cta-banner">
+  <div>
+    <div class="cta-title">Ready to explore the North?</div>
+    <div class="cta-sub">Design your perfect Pakistan trip in under 3 minutes.</div>
+  </div>
+  <a href="design-trip.html" class="cta-btn">Design My Trip →</a>
+</div>
+
+<!-- FOOTER -->
+<footer style="margin-top: 96px;">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">Pak<span>Trips</span></div>
+        <div class="footer-desc">Pakistan's most trusted trip planning platform for northern adventures. Curated itineraries, verified hotels, expert guides.</div>
+      </div>
+      <div>
+        <div class="footer-col-title">Destinations</div>
+        <ul class="footer-links">
+          <li><a href="#">Hunza Valley</a></li>
+          <li><a href="#">Skardu</a></li>
+          <li><a href="#">Naran & Kaghan</a></li>
+          <li><a href="#">Astore</a></li>
+          <li><a href="#">Deosai Plains</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact</div>
+        <ul class="footer-links">
+          <li><a href="#">+92 300 1234567</a></li>
+          <li><a href="#">info@paktrips.pk</a></li>
+          <li><a href="#">WhatsApp Us</a></li>
+          <li><a href="#">Islamabad Office</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 PakTrips. All rights reserved.</div>
+      <div>Privacy Policy · Terms of Service</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
