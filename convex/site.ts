@@ -3,9 +3,10 @@ import { query } from "./_generated/server";
 export const getBootstrapStatus = query({
   args: {},
   handler: async (ctx) => {
-    const packages = await ctx.db.query("packages").take(1);
+    const packages = await ctx.db.query("packages").collect();
     return {
-      hasData: packages.length > 0
+      hasData: packages.length >= 15,
+      packageCount: packages.length
     };
   }
 });

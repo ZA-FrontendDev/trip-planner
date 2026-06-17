@@ -85,6 +85,7 @@ export default defineSchema({
     totalPrice: v.number(),
     status: v.union(v.literal("pending"), v.literal("confirmed"), v.literal("cancelled")),
     createdAt: v.number(),
+    images: v.optional(v.array(v.string())),
     hotelOverrides: v.array(
       v.object({
         dayId: v.id("itineraryDays"),

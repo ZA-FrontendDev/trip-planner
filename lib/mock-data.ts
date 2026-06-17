@@ -159,7 +159,7 @@ export const sampleBooking: TripBooking = {
         name: "Minimarg Scenic Camp",
         verified: true,
         stars: 4,
-        roomLabel: "Executive Tent x 2",
+        roomLabel: "Deluxe Double x 2",
         pricePerNight: 12800
       }
     }

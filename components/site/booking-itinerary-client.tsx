@@ -12,25 +12,29 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
-  Users
+  Users,
 } from "lucide-react";
 
 import hotelImage from "@/hotel.png";
 import roomImage from "@/room.png";
 import { api } from "@/convex/_generated/api";
 import { formatPrice } from "@/lib/format-price";
-import type { BookingItineraryView, ItineraryDayView, SiteHotel } from "@/lib/trip-types";
+import type {
+  BookingItineraryView,
+  ItineraryDayView,
+  SiteHotel,
+} from "@/lib/trip-types";
 import { BootstrapData } from "@/components/shared/bootstrap-data";
 
-type DialogState =
-  | {
-      type: "hotel" | "room";
-      day: ItineraryDayView;
-    }
-  | null;
+type DialogState = {
+  type: "hotel" | "room";
+  day: ItineraryDayView;
+} | null;
 
 export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
-  const booking = useQuery(api.bookings.getItinerary, { bookingId: bookingId as never });
+  const booking = useQuery(api.bookings.getItinerary, {
+    bookingId: bookingId as never,
+  });
   const changeHotel = useMutation(api.bookings.changeHotel);
   const changeRoom = useMutation(api.bookings.changeRoom);
   const changeVehicle = useMutation(api.bookings.changeVehicle);
@@ -47,7 +51,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
     return (
       <div className="space-y-6">
         <BootstrapData />
-        <div className="card-surface p-8 text-sm text-slate-600">Loading booking itinerary...</div>
+        <div className="card-surface p-8 text-sm text-slate-600">
+          Loading booking itinerary...
+        </div>
       </div>
     );
   }
@@ -56,21 +62,60 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
 
   return (
     <div className="space-y-6">
-      <section className="card-surface overflow-hidden p-6">
+      <section className="relative card-surface overflow-hidden p-6">
         <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(90deg,rgba(13,124,110,0.09),rgba(245,158,11,0.06),transparent)]" />
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h1 className="display-font text-3xl font-semibold text-ink">{bookingData.package.title}</h1>
+            <h1 className="display-font text-3xl font-semibold text-ink">
+              {bookingData.package.title}
+            </h1>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-600">
-              <MetaItem icon={<MapPin className="h-4 w-4" />} label={bookingData.departureCity} />
-              <MetaItem icon={<CalendarDays className="h-4 w-4" />} label={`${bookingData.startDate} - ${bookingData.endDate}`} />
-              <MetaItem icon={<CalendarDays className="h-4 w-4" />} label={`${bookingData.package.durationDays} Days`} />
-              <MetaItem icon={<Users className="h-4 w-4" />} label={travelerLabel} />
-              <MetaItem icon={<ShieldCheck className="h-4 w-4" />} label={bookingData.travelClass} />
-              <MetaItem icon={<CarFront className="h-4 w-4" />} label={bookingData.vehicle?.name ?? "Vehicle pending"} />
+              <MetaItem
+                icon={<MapPin className="h-4 w-4" />}
+                label={bookingData.departureCity}
+              />
+              <MetaItem
+                icon={<CalendarDays className="h-4 w-4" />}
+                label={`${bookingData.startDate} - ${bookingData.endDate}`}
+              />
+              <MetaItem
+                icon={<CalendarDays className="h-4 w-4" />}
+                label={`${bookingData.package.durationDays} Days`}
+              />
+              <MetaItem
+                icon={<Users className="h-4 w-4" />}
+                label={travelerLabel}
+              />
+              <MetaItem
+                icon={<ShieldCheck className="h-4 w-4" />}
+                label={bookingData.travelClass}
+              />
+              <MetaItem
+                icon={<CarFront className="h-4 w-4" />}
+                label={bookingData.vehicle?.name ?? "Vehicle pending"}
+              />
             </div>
           </div>
-          <div className="space-y-4 xl:min-w-[360px]">
+          <div className="space-y-4 xl:min-w-90">
+            {bookingData.vehicle?.images?.[0] ? (
+              <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+                <div className="relative h-36 w-full">
+                  <Image
+                    src={bookingData.vehicle.images[0]}
+                    alt={bookingData.vehicle.name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {bookingData.vehicle.name}
+                  </p>
+                  <p className="text-xs text-slate-500">Selected vehicle</p>
+                </div>
+              </div>
+            ) : null}
             <p className="text-right text-sm text-slate-500">
               Trip total{" "}
               <span className="display-font text-2xl font-semibold text-primary">
@@ -80,11 +125,14 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
             <div className="flex flex-col gap-3 sm:flex-row xl:justify-end">
               <SelectShell>
                 <select
-                  className="select-base max-w-full sm:max-w-[240px]"
+                  className="select-base max-w-full sm:max-w-60"
                   value={bookingData.vehicle?._id ?? ""}
                   onChange={async (event) => {
                     setBusyKey("vehicle");
-                    await changeVehicle({ bookingId: bookingData._id as never, vehicleId: event.target.value as never });
+                    await changeVehicle({
+                      bookingId: bookingData._id as never,
+                      vehicleId: event.target.value as never,
+                    });
                     setBusyKey(null);
                   }}
                 >
@@ -106,19 +154,55 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
       <section>
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="display-font text-3xl font-semibold text-ink">Itinerary</h2>
+            <h2 className="display-font text-3xl font-semibold text-ink">
+              Itinerary
+            </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Day titles, routes, overnight locations, and places covered come from the package itinerary stored in Convex. Dates are generated from your selected start date.
+              Day titles, routes, overnight locations, and places covered come
+              from the package itinerary stored in Convex. Dates are generated
+              from your selected start date.
             </p>
           </div>
         </div>
 
+        {bookingData.images?.length ? (
+          <div className="mt-6 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Booking Media
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {bookingData.images.map((image, index) => (
+                <div
+                  key={`${image}-${index}`}
+                  className="overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50"
+                >
+                  <div className="relative h-28 w-full">
+                    <Image
+                      src={image}
+                      alt={`Booking media ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-6 space-y-5">
           {bookingData.days.map((day) => {
-            const relevantHotels = getRelevantHotels(bookingData.hotelOptions, day);
+            const relevantHotels = getRelevantHotels(
+              bookingData.hotelOptions,
+              day,
+            );
 
             return (
-              <article key={day._id} className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-start">
+              <article
+                key={day._id}
+                className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-start"
+              >
                 <div className="px-2 pt-4 text-sm text-slate-600 lg:text-right">
                   <p className="display-font text-xl text-ink">{day.date}</p>
                   <p>Day {day.dayNumber}</p>
@@ -129,7 +213,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                     <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-slate-900">{day.title}</p>
+                        <p className="font-medium text-slate-900">
+                          {day.title}
+                        </p>
                         {day.isGenerated ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
                             <Sparkles className="size-3.5" />
@@ -137,18 +223,31 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-sm leading-6 text-slate-700">{day.description}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-700">
+                        {day.description}
+                      </p>
                     </div>
                   </div>
 
                   <div className="px-4">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Places Covered</p>
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Places Covered
+                    </p>
                     <div className="grid gap-3 xl:grid-cols-4">
-                      {day.placesCovered.map((place) => (
-                        <div key={place.name} className="overflow-hidden rounded-[18px] border border-slate-200/70 bg-white">
+                      {day.placesCovered.map((place, index) => (
+                        <div
+                          key={`${day._id}-${place.name}-${index}`}
+                          className="overflow-hidden rounded-[18px] border border-slate-200/70 bg-white"
+                        >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={place.image} alt={place.name} className="h-20 w-full object-cover" />
-                          <p className="px-4 py-4 text-sm font-medium text-slate-700">{place.name}</p>
+                          <img
+                            src={place.image}
+                            alt={place.name}
+                            className="h-20 w-full object-cover"
+                          />
+                          <p className="px-4 py-4 text-sm font-medium text-slate-700">
+                            {place.name}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -157,7 +256,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                   <div className="flex items-center gap-3 rounded-[18px] border border-slate-200/70 bg-white px-4 py-4">
                     <MapPin className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium text-slate-800">{day.overnightLocation}</p>
+                      <p className="font-medium text-slate-800">
+                        {day.overnightLocation}
+                      </p>
                       <p className="text-xs text-slate-500">Overnight stop</p>
                     </div>
                   </div>
@@ -166,9 +267,22 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-3">
                         <Hotel className="mt-0.5 h-5 w-5 text-primary" />
+                        {day.hotel?.images?.[0] ? (
+                          <div className="relative h-20 w-28 overflow-hidden rounded-[18px] border border-slate-200">
+                            <Image
+                              src={day.hotel.images[0]}
+                              alt={day.hotel.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ) : null}
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-medium text-slate-800">{day.hotel?.name ?? "Hotel not assigned"}</p>
+                            <p className="font-medium text-slate-800">
+                              {day.hotel?.name ?? "Hotel not assigned"}
+                            </p>
                             {day.hotel?.isVerified ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
                                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -176,16 +290,24 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                               </span>
                             ) : null}
                             <div className="flex items-center gap-1 text-accent">
-                              {Array.from({ length: day.hotel?.stars ?? 0 }).map((_, index) => (
-                                <Star key={index} className="h-4 w-4 fill-current" />
+                              {Array.from({
+                                length: day.hotel?.stars ?? 0,
+                              }).map((_, index) => (
+                                <Star
+                                  key={index}
+                                  className="h-4 w-4 fill-current"
+                                />
                               ))}
                             </div>
                           </div>
                           <p className="mt-2 text-sm text-slate-500">
-                            {day.hotel ? `${formatPrice(day.hotel.pricePerNight)} per night` : "Choose a hotel for this stop"}
+                            {day.hotel
+                              ? `${formatPrice(day.hotel.pricePerNight)} per night`
+                              : "Choose a hotel for this stop"}
                           </p>
                           <span className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                            {(day.roomType ?? bookingData.roomType) + ` x ${day.roomQuantity}`}
+                            {(day.roomType ?? bookingData.roomType) +
+                              ` x ${day.roomQuantity}`}
                           </span>
                         </div>
                       </div>
@@ -199,7 +321,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                         buttonLabel="Change Hotel"
                         busy={busyKey === `hotel-${day._id}`}
                         onClick={() => setDialogState({ type: "hotel", day })}
-                        disabled={relevantHotels.length === 0 || day.isGenerated}
+                        disabled={
+                          relevantHotels.length === 0 || day.isGenerated
+                        }
                       />
                       <ActionCard
                         title="Change Room"
@@ -214,7 +338,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
 
                     {day.isGenerated ? (
                       <p className="mt-3 text-xs text-amber-700">
-                        This day was generated to complete the itinerary. Create a fresh booking after the package itinerary is saved in admin if you want direct day-level customization here.
+                        This day was generated to complete the itinerary. Create
+                        a fresh booking after the package itinerary is saved in
+                        admin if you want direct day-level customization here.
                       </p>
                     ) : null}
                   </div>
@@ -225,7 +351,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
         </div>
       </section>
 
-      {busyKey ? <p className="text-sm text-slate-500">Saving customization...</p> : null}
+      {busyKey ? (
+        <p className="text-sm text-slate-500">Saving customization...</p>
+      ) : null}
 
       {dialogState ? (
         <CustomizerDialog
@@ -239,7 +367,10 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
               bookingId: bookingData._id as never,
               dayId: dialogState.day._id as never,
               hotelId: hotel._id as never,
-              roomType: hotel.roomTypes[0]?.type ?? dialogState.day.roomType ?? bookingData.roomType
+              roomType:
+                hotel.roomTypes[0]?.type ??
+                dialogState.day.roomType ??
+                bookingData.roomType,
             });
             setBusyKey(null);
             setDialogState(null);
@@ -249,7 +380,7 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
             await changeRoom({
               bookingId: bookingData._id as never,
               dayId: dialogState.day._id as never,
-              roomType
+              roomType,
             });
             setBusyKey(null);
             setDialogState(null);
@@ -285,7 +416,7 @@ function ActionCard({
   buttonLabel,
   busy,
   disabled,
-  onClick
+  onClick,
 }: {
   title: string;
   description: string;
@@ -296,7 +427,7 @@ function ActionCard({
   onClick: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfb_100%)] shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+    <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfb_100%)] shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
       <div className="grid gap-4 p-4 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-center">
         <div className="overflow-hidden rounded-[18px] border border-slate-200/70 bg-slate-50">
           <Image src={image} alt={title} className="h-24 w-full object-cover" />
@@ -324,7 +455,7 @@ function CustomizerDialog({
   busyKey,
   onClose,
   onSelectHotel,
-  onSelectRoom
+  onSelectRoom,
 }: {
   dialogState: NonNullable<DialogState>;
   bookingData: BookingItineraryView;
@@ -333,15 +464,18 @@ function CustomizerDialog({
   onSelectHotel: (hotel: SiteHotel) => Promise<void>;
   onSelectRoom: (roomType: string) => Promise<void>;
 }) {
-  const relevantHotels = getRelevantHotels(bookingData.hotelOptions, dialogState.day);
+  const relevantHotels = getRelevantHotels(
+    bookingData.hotelOptions,
+    dialogState.day,
+  );
   const roomChoices = dialogState.day.hotel?.roomTypes ?? [];
   const isHotelDialog = dialogState.type === "hotel";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 py-8">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_40px_120px_rgba(15,23,42,0.18)]">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-[0_40px_120px_rgba(15,23,42,0.18)]">
         <div className="grid gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <div className="relative min-h-[220px] bg-slate-100">
+          <div className="relative min-h-55 bg-slate-100">
             <Image
               src={isHotelDialog ? hotelImage : roomImage}
               alt={isHotelDialog ? "Hotel selection" : "Room selection"}
@@ -356,7 +490,9 @@ function CustomizerDialog({
               <h3 className="display-font mt-2 text-2xl font-semibold">
                 Day {dialogState.day.dayNumber}: {dialogState.day.title}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-white/80">{dialogState.day.overnightLocation}</p>
+              <p className="mt-2 text-sm leading-6 text-white/80">
+                {dialogState.day.overnightLocation}
+              </p>
             </div>
           </div>
 
@@ -390,18 +526,27 @@ function CustomizerDialog({
                     >
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-slate-900">{hotel.name}</p>
+                          <p className="font-semibold text-slate-900">
+                            {hotel.name}
+                          </p>
                           {hotel.isVerified ? (
                             <span className="inline-flex rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
                               Verified
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-sm text-slate-600">{hotel.location}</p>
-                        <p className="mt-2 text-sm text-slate-500">{hotel.roomTypes[0]?.type ?? "Standard room"} included first</p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {hotel.location}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          {hotel.roomTypes[0]?.type ?? "Standard room"} included
+                          first
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-slate-900">{formatPrice(hotel.pricePerNight)}</p>
+                        <p className="font-semibold text-slate-900">
+                          {formatPrice(hotel.pricePerNight)}
+                        </p>
                         <p className="text-xs text-slate-500">per night</p>
                       </div>
                     </button>
@@ -415,11 +560,17 @@ function CustomizerDialog({
                       disabled={busyKey === `room-${dialogState.day._id}`}
                     >
                       <div>
-                        <p className="font-semibold text-slate-900">{room.type}</p>
-                        <p className="mt-1 text-sm text-slate-600">Capacity: {room.capacity} guests</p>
+                        <p className="font-semibold text-slate-900">
+                          {room.type}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          Capacity: {room.capacity} guests
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-slate-900">{formatPrice(room.pricePerNight)}</p>
+                        <p className="font-semibold text-slate-900">
+                          {formatPrice(room.pricePerNight)}
+                        </p>
                         <p className="text-xs text-slate-500">per night</p>
                       </div>
                     </button>
@@ -447,8 +598,10 @@ function CustomizerDialog({
 function getRelevantHotels(hotels: SiteHotel[], day: ItineraryDayView) {
   const matches = hotels.filter(
     (hotel) =>
-      hotel.location.toLowerCase().includes(day.overnightLocation.toLowerCase()) ||
-      hotel.location.toLowerCase() === day.overnightLocation.toLowerCase()
+      hotel.location
+        .toLowerCase()
+        .includes(day.overnightLocation.toLowerCase()) ||
+      hotel.location.toLowerCase() === day.overnightLocation.toLowerCase(),
   );
 
   return matches.length > 0 ? matches : hotels;

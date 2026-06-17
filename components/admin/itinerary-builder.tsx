@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
 import type { SiteHotel } from "@/lib/trip-types";
+import { AdminField } from "@/components/admin/admin-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -51,7 +52,7 @@ export function ItineraryBuilder({ packageId }: { packageId: string }) {
         </CardHeader>
         <CardContent>
           <form
-            className="grid gap-4 md:grid-cols-2"
+            className="grid gap-5 md:grid-cols-2"
             onSubmit={async (event) => {
               event.preventDefault();
               const placesCovered = draft.placesCoveredText
@@ -89,36 +90,54 @@ export function ItineraryBuilder({ packageId }: { packageId: string }) {
               });
             }}
           >
-            <input className="input-base" type="number" min="1" value={draft.dayNumber} onChange={(event) => setDraft((current) => ({ ...current, dayNumber: Number(event.target.value) }))} />
-            <input className="input-base" type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} />
-            <input className="input-base md:col-span-2" placeholder="Day title" value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} required />
-            <textarea className="textarea-base md:col-span-2 min-h-28" placeholder="Route description" value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} required />
-            <input className="input-base" placeholder="Overnight location" value={draft.overnightLocation} onChange={(event) => setDraft((current) => ({ ...current, overnightLocation: event.target.value }))} required />
-            <select className="input-base" value={draft.hotelId} onChange={(event) => {
-              const nextHotel = hotelRecords.find((hotel) => hotel._id === event.target.value);
-              setDraft((current) => ({
-                ...current,
-                hotelId: event.target.value,
-                roomType: nextHotel?.roomTypes?.[0]?.type ?? ""
-              }));
-            }}>
-              <option value="">No hotel assignment</option>
-              {hotelRecords.map((hotel) => (
-                <option key={hotel._id} value={hotel._id}>
-                  {hotel.name}
-                </option>
-              ))}
-            </select>
-            <select className="input-base" value={draft.roomType} onChange={(event) => setDraft((current) => ({ ...current, roomType: event.target.value }))}>
-              <option value="">Select room type</option>
-              {(hotelRecords.find((hotel) => hotel._id === draft.hotelId)?.roomTypes ?? []).map((room) => (
-                <option key={room.type} value={room.type}>
-                  {room.type}
-                </option>
-              ))}
-            </select>
-            <input className="input-base" type="number" min="1" value={draft.quantity} onChange={(event) => setDraft((current) => ({ ...current, quantity: Number(event.target.value) }))} />
-            <textarea className="textarea-base md:col-span-2 min-h-32" placeholder="Places covered, one per line. Format: Name | Image URL" value={draft.placesCoveredText} onChange={(event) => setDraft((current) => ({ ...current, placesCoveredText: event.target.value }))} />
+            <AdminField label="Day number" hint="Enter the numerical order of this itinerary day.">
+              <input className="input-base" type="number" min="1" value={draft.dayNumber} onChange={(event) => setDraft((current) => ({ ...current, dayNumber: Number(event.target.value) }))} />
+            </AdminField>
+            <AdminField label="Day date" hint="Choose the calendar date for this itinerary day.">
+              <input className="date-base" type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} />
+            </AdminField>
+            <AdminField label="Day title" hint="Enter the main route or trip headline for this day." className="md:col-span-2">
+              <input className="input-base" placeholder="e.g. Islamabad to Naran" value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} required />
+            </AdminField>
+            <AdminField label="Route description" hint="Describe the travel flow, stopovers, and major activities for this day." className="md:col-span-2">
+              <textarea className="textarea-base min-h-28" placeholder="Departure, stops, arrivals, activities..." value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} required />
+            </AdminField>
+            <AdminField label="Overnight location" hint="Enter the place where travelers will stay overnight.">
+              <input className="input-base" placeholder="e.g. Astore" value={draft.overnightLocation} onChange={(event) => setDraft((current) => ({ ...current, overnightLocation: event.target.value }))} required />
+            </AdminField>
+            <AdminField label="Assigned hotel" hint="Choose the hotel assigned to this itinerary day, if any.">
+              <select className="select-base" value={draft.hotelId} onChange={(event) => {
+                const nextHotel = hotelRecords.find((hotel) => hotel._id === event.target.value);
+                setDraft((current) => ({
+                  ...current,
+                  hotelId: event.target.value,
+                  roomType: nextHotel?.roomTypes?.[0]?.type ?? ""
+                }));
+              }}>
+                <option value="">No hotel assignment</option>
+                {hotelRecords.map((hotel) => (
+                  <option key={hotel._id} value={hotel._id}>
+                    {hotel.name}
+                  </option>
+                ))}
+              </select>
+            </AdminField>
+            <AdminField label="Assigned room type" hint="Choose the room type that should be assigned for the selected hotel.">
+              <select className="select-base" value={draft.roomType} onChange={(event) => setDraft((current) => ({ ...current, roomType: event.target.value }))}>
+                <option value="">Select room type</option>
+                {(hotelRecords.find((hotel) => hotel._id === draft.hotelId)?.roomTypes ?? []).map((room) => (
+                  <option key={room.type} value={room.type}>
+                    {room.type}
+                  </option>
+                ))}
+              </select>
+            </AdminField>
+            <AdminField label="Room quantity" hint="Enter how many rooms of the selected type are needed for this day.">
+              <input className="input-base" type="number" min="1" value={draft.quantity} onChange={(event) => setDraft((current) => ({ ...current, quantity: Number(event.target.value) }))} />
+            </AdminField>
+            <AdminField label="Places covered" hint="Add one place per line using the format Name | Image URL." className="md:col-span-2">
+              <textarea className="textarea-base min-h-32" placeholder="Kaghan | https://...\nNaran | https://..." value={draft.placesCoveredText} onChange={(event) => setDraft((current) => ({ ...current, placesCoveredText: event.target.value }))} />
+            </AdminField>
             <div className="md:col-span-2 flex justify-end">
               <Button type="submit">Add itinerary day</Button>
             </div>

@@ -1,30 +1,61 @@
+"use client";
+
 import Link from "next/link";
-import { Compass, MapPinned } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export function Navbar() {
+  const pathname = usePathname();
+
   return (
-    <header className="section-shell pt-6">
-      <div className="card-surface flex items-center justify-between px-5 py-4">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Compass className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="display-font text-lg font-semibold tracking-tight text-ink">
-              Pakistan Trip Planner
-            </p>
-            <p className="text-xs text-slate-500">Curated northern routes with editable itineraries</p>
-          </div>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl">
+      <div className="mx-auto flex h-18 w-full max-w-350 items-center justify-between px-[5%]">
+        <Link
+          href="/"
+          className="display-font text-[22px] font-bold tracking-[-0.5px] text-primary"
+        >
+          Pak<span className="text-amber-500">Trips</span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/design-trip" className="pill-button">
-            <MapPinned className="mr-2 h-4 w-4" />
-            Design My Trip
-          </Link>
+
+        <nav className="hidden items-center gap-9 md:flex">
+          <NavLink href="/" active={pathname === "/"}>
+            Home
+          </NavLink>
+          <NavLink href="/about" active={pathname === "/about"}>
+            About
+          </NavLink>
+          <NavLink href="/contact" active={pathname === "/contact"}>
+            Contact
+          </NavLink>
         </nav>
+
+        <Link
+          href="/design-trip"
+          className="display-font rounded-lg bg-primary px-5.5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#085041]"
+        >
+          Design My Trip →
+        </Link>
       </div>
     </header>
+  );
+}
+
+function NavLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`text-sm font-medium transition ${
+        active ? "text-primary" : "text-slate-500 hover:text-primary"
+      }`}
+    >
+      {children}
+    </Link>
   );
 }

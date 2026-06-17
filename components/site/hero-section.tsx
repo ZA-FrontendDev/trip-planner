@@ -13,11 +13,13 @@ export function HeroSection() {
               Scenic itineraries, hotel controls, and smart trip configuration
             </div>
             <h1 className="display-font text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-              Plan mountain routes with a booking flow built around the itinerary.
+              Plan mountain routes with a booking flow built around the
+              itinerary.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-300">
-              The first pass focuses on a refined design-trip experience: configure the journey,
-              review each day, then swap hotels, rooms, and vehicles without leaving the booking.
+              The first pass focuses on a refined design-trip experience:
+              configure the journey, review each day, then swap hotels, rooms,
+              and vehicles without leaving the booking.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -27,21 +29,24 @@ export function HeroSection() {
                 Design My Trip
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-              <Link href="/design-trip/astore-minimarg-001" className="pill-button border-white/20 bg-white/10 text-white hover:border-white/40 hover:text-white">
+              <Link
+                href="/design-trip/astore-minimarg-001"
+                className="pill-button border-white/20 bg-white/10 text-white hover:border-white/40 hover:text-white"
+              >
                 View Sample Itinerary
               </Link>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur">
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
               <p className="text-sm text-slate-300">Signature routes</p>
               <p className="mt-3 display-font text-3xl">12</p>
             </div>
-            <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur">
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
               <p className="text-sm text-slate-300">Editable stay choices</p>
               <p className="mt-3 display-font text-3xl">Hotel, room, vehicle</p>
             </div>
-            <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur">
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
               <p className="text-sm text-slate-300">Current build phase</p>
               <p className="mt-3 display-font text-3xl">Public trip flow</p>
             </div>

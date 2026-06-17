@@ -1,15 +1,13 @@
 import { DesignTripClient } from "@/components/site/design-trip-client";
-import { Footer } from "@/components/site/footer";
 import { Navbar } from "@/components/site/navbar";
 
 export default function DesignTripPage() {
   return (
-    <main className="pb-8">
+    <main>
       <Navbar />
-      <section className="section-shell pt-8">
+      <div className="mt-[72px]">
         <DesignTripClient />
-      </section>
-      <Footer />
+      </div>
     </main>
   );
 }

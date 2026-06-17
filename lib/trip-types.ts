@@ -73,6 +73,7 @@ export type BookingItineraryView = {
   startDate: string;
   endDate: string;
   totalPrice: number;
+  images?: string[];
   package: SitePackage;
   vehicle: SiteVehicle | null;
   vehicleOptions: SiteVehicle[];
@@ -92,5 +93,6 @@ export type DashboardData = {
     endDate: string;
     totalPrice: number;
     status: string;
+    images?: string[];
   }[];
 };

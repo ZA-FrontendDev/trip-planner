@@ -12,7 +12,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   const { bookingId } = await params;
 
   return (
-    <main className="pb-8">
+    <main className="pb-8 pt-[72px]">
       <Navbar />
       <section className="section-shell pt-8">
         <BookingItineraryClient bookingId={bookingId} />

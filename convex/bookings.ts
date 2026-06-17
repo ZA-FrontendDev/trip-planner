@@ -59,6 +59,7 @@ export const create = mutation({
       totalPrice: 0,
       status: "pending",
       createdAt: Date.now(),
+      images: [],
       hotelOverrides: []
     });
 
@@ -115,6 +116,19 @@ export const updateStatus = mutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.bookingId, {
       status: args.status
+    });
+    return args.bookingId;
+  }
+});
+
+export const updateAssets = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+    images: v.array(v.string())
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.bookingId, {
+      images: args.images
     });
     return args.bookingId;
   }

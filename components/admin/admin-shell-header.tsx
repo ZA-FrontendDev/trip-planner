@@ -11,14 +11,21 @@ export function AdminShellHeader() {
         <div className="flex items-center gap-3">
           <SidebarTrigger />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Admin panel</p>
-            <h1 className="display-font text-xl font-semibold text-foreground">Pakistan Trip Planner</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+              Admin panel
+            </p>
+            <h1 className="display-font text-xl font-semibold text-foreground">
+              Pakistan Trip Planner
+            </h1>
           </div>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative min-w-[240px]">
+          <div className="relative min-w-60">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search packages, hotels, bookings..." />
+            <Input
+              className="pl-9"
+              placeholder="Search packages, hotels, bookings..."
+            />
           </div>
           <Button variant="outline" className="justify-start gap-2">
             <CalendarDays className="size-4" />

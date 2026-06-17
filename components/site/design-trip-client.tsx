@@ -3,12 +3,17 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
-import { CalendarDays, ChevronDown, MapPinned, Sparkles } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import { BootstrapData } from "@/components/shared/bootstrap-data";
 import type { TravelClass } from "@/lib/trip-options";
-import { DEPARTURE_CITIES, DESTINATIONS, ROOM_TYPES, TRAVEL_CLASSES, VEHICLE_TYPES } from "@/lib/trip-options";
+import {
+  DEPARTURE_CITIES,
+  DESTINATIONS,
+  ROOM_TYPES,
+  TRAVEL_CLASSES,
+  VEHICLE_TYPES,
+} from "@/lib/trip-options";
 
 type DesignTripFormState = {
   customerName: string;
@@ -32,6 +37,7 @@ export function DesignTripClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState<DesignTripFormState>({
     customerName: "",
     customerEmail: "",
@@ -45,7 +51,7 @@ export function DesignTripClient() {
     roomType: ROOM_TYPES[0],
     travelClass: TRAVEL_CLASSES[0],
     vehicleType: VEHICLE_TYPES[0],
-    specialRequests: ""
+    specialRequests: "",
   });
 
   const durationLabel = useMemo(() => {
@@ -54,242 +60,498 @@ export function DesignTripClient() {
     }
     const start = new Date(form.startDate);
     const end = new Date(form.endDate);
-    const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const days =
+      Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     return `${Math.max(days, 1)} days`;
   }, [form.endDate, form.startDate]);
 
-  return (
-    <div className="space-y-6">
-      <BootstrapData />
-      <div className="card-surface relative overflow-hidden p-6 sm:p-8">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(90deg,rgba(13,124,110,0.08),rgba(245,158,11,0.06),transparent)]" />
+  const totalTravelers = form.adults + form.children;
 
-        <div className="relative mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Design My Trip</p>
-          <h2 className="display-font mt-3 text-3xl font-semibold text-ink">Trip configuration</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-            Enter your trip details below. We will match your selection with an active package and then open the editable itinerary.
-          </p>
+  return (
+    <div className="bg-slate-100">
+      <BootstrapData />
+
+      <section className="overflow-hidden bg-[linear-gradient(135deg,#0a2e2b_0%,#0D7C6E_100%)] px-[5%] py-14 text-center">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[2px] text-amber-400">
+          Step-by-Step Planner
+        </p>
+        <h1 className="display-font text-[clamp(28px,4vw,44px)] font-bold tracking-[-0.8px] text-white">
+          Design Your Perfect Trip
+        </h1>
+        <p className="mt-2 text-[15px] text-white/65">
+          Fill in your details and we&apos;ll build a complete itinerary for
+          you.
+        </p>
+      </section>
+
+      <section className="border-b border-slate-200 bg-white px-[5%]">
+        <div className="mx-auto flex max-w-225 items-center">
+          {[
+            [1, "Personal Info"],
+            [2, "Trip Details"],
+            [3, "Preferences"],
+          ].map(([itemStep, label], index) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setStep(itemStep as number)}
+              className="relative flex flex-1 items-center gap-2.5 py-4.5 text-left"
+            >
+              <span
+                className={`display-font flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                  step === itemStep || step > (itemStep as number)
+                    ? "border-primary bg-primary text-white"
+                    : "border-slate-200 bg-white text-slate-400"
+                }`}
+              >
+                {itemStep}
+              </span>
+              <span
+                className={`text-[13px] font-semibold ${step === itemStep ? "text-primary" : "text-slate-500"}`}
+              >
+                {label}
+              </span>
+              {index < 2 ? (
+                <span className="pointer-events-none absolute left-32.5 right-0 top-1/2 h-px bg-slate-200" />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-275 gap-7 px-[5%] py-10 lg:grid-cols-[1fr_320px]">
+        <div>
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setError(null);
+              setDialogMessage(null);
+              setIsSubmitting(true);
+              try {
+                const bookingId = await createBooking(form);
+                router.push(`/design-trip/${bookingId}`);
+              } catch (submitError) {
+                const message =
+                  submitError instanceof Error
+                    ? submitError.message
+                    : "Unable to create booking.";
+                const normalizedMessage = message.includes(
+                  "No active package matches the selected trip criteria yet.",
+                )
+                  ? "No package matches your selected trip criteria yet."
+                  : "Unable to create your itinerary right now. Please try again.";
+                setError(normalizedMessage);
+                setDialogMessage(normalizedMessage);
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}
+          >
+            {step === 1 ? (
+              <FormCard
+                title="Personal Information"
+                sub="Tell us about yourself so we can personalise your trip."
+              >
+                <div className="grid gap-5 md:grid-cols-2">
+                  <Field label="Full Name *">
+                    <input
+                      className="input-base bg-slate-50 focus:bg-white"
+                      placeholder="Ahmed Khan"
+                      value={form.customerName}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          customerName: event.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </Field>
+                  <Field label="Email Address *">
+                    <input
+                      className="input-base bg-slate-50 focus:bg-white"
+                      type="email"
+                      placeholder="ahmed@email.com"
+                      value={form.customerEmail}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          customerEmail: event.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </Field>
+                </div>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  <Field label="Phone / WhatsApp *">
+                    <input
+                      className="input-base bg-slate-50 focus:bg-white"
+                      placeholder="+92 300 0000000"
+                      value={form.customerPhone}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          customerPhone: event.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </Field>
+                  <Field label="Departure City *">
+                    <select
+                      className="select-base bg-slate-50 focus:bg-white"
+                      value={form.departureCity}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          departureCity: event.target.value,
+                        }))
+                      }
+                    >
+                      {DEPARTURE_CITIES.map((city) => (
+                        <option key={city}>{city}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  <Field label="Number of Adults *">
+                    <select
+                      className="select-base bg-slate-50 focus:bg-white"
+                      value={String(form.adults)}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          adults: Number(event.target.value),
+                        }))
+                      }
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
+                        <option key={count} value={count}>
+                          {count} Adult{count > 1 ? "s" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Number of Children">
+                    <select
+                      className="select-base bg-slate-50 focus:bg-white"
+                      value={String(form.children)}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          children: Number(event.target.value),
+                        }))
+                      }
+                    >
+                      {[0, 1, 2, 3, 4, 5].map((count) => (
+                        <option key={count} value={count}>
+                          {count === 0
+                            ? "No Children"
+                            : `${count} Child${count > 1 ? "ren" : ""}`}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="mt-5">
+                  <Field label="Special Requests">
+                    <input
+                      className="input-base bg-slate-50 focus:bg-white"
+                      placeholder="Dietary, medical, accessibility, etc."
+                      value={form.specialRequests}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          specialRequests: event.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                </div>
+
+                <FormNav hint="Step 1 of 3">
+                  <button
+                    type="button"
+                    className="display-font rounded-[10px] bg-primary px-8 py-3 text-sm font-bold text-white transition hover:bg-[#085041]"
+                    onClick={() => setStep(2)}
+                  >
+                    Continue →
+                  </button>
+                </FormNav>
+              </FormCard>
+            ) : null}
+
+            {step === 2 ? (
+              <FormCard
+                title="Trip Details"
+                sub="Where are you heading and when?"
+              >
+                <Field label="Destination *">
+                  <select
+                    className="select-base bg-slate-50 focus:bg-white"
+                    value={form.destination}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        destination: event.target.value,
+                      }))
+                    }
+                  >
+                    {DESTINATIONS.map((destination) => (
+                      <option key={destination}>{destination}</option>
+                    ))}
+                  </select>
+                </Field>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  <Field label="Departure Date *">
+                    <input
+                      className="date-base bg-slate-50 focus:bg-white"
+                      type="date"
+                      value={form.startDate}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          startDate: event.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </Field>
+                  <Field label="Return Date *">
+                    <input
+                      className="date-base bg-slate-50 focus:bg-white"
+                      type="date"
+                      value={form.endDate}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          endDate: event.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </Field>
+                </div>
+
+                <div className="mt-6">
+                  <p className="mb-4 text-xs font-semibold tracking-[0.2px] text-slate-900">
+                    Travel Class *
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {[
+                      [
+                        "economy",
+                        "🚗",
+                        "Economy",
+                        "Standard hotels & vehicles",
+                      ],
+                      [
+                        "business",
+                        "✨",
+                        "Business",
+                        "3–4 star hotels, premium cars",
+                      ],
+                    ].map(([value, icon, title, sub]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            travelClass: value as TravelClass,
+                          }))
+                        }
+                        className={`rounded-xl border-2 p-4 text-center transition ${
+                          form.travelClass === value
+                            ? "border-primary bg-emerald-50"
+                            : "border-slate-200 hover:border-primary hover:bg-emerald-50"
+                        }`}
+                      >
+                        <div className="mb-2 text-2xl">{icon}</div>
+                        <div className="display-font text-[13px] font-semibold text-slate-900">
+                          {title}
+                        </div>
+                        <div className="mt-1 text-[11px] text-slate-500">
+                          {sub}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <FormNav hint="Step 2 of 3" back={() => setStep(1)}>
+                  <button
+                    type="button"
+                    className="display-font rounded-[10px] bg-primary px-8 py-3 text-sm font-bold text-white transition hover:bg-[#085041]"
+                    onClick={() => setStep(3)}
+                  >
+                    Continue →
+                  </button>
+                </FormNav>
+              </FormCard>
+            ) : null}
+
+            {step === 3 ? (
+              <FormCard
+                title="Choose Your Preferences"
+                sub="Set room and vehicle preferences before we build the itinerary."
+              >
+                <div>
+                  <p className="mb-4 text-xs font-semibold tracking-[0.2px] text-slate-900">
+                    Room Type *
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {ROOM_TYPES.map((roomType) => (
+                      <button
+                        key={roomType}
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({ ...current, roomType }))
+                        }
+                        className={`rounded-xl border-2 p-4 text-center transition ${
+                          form.roomType === roomType
+                            ? "border-primary bg-emerald-50"
+                            : "border-slate-200 hover:border-primary hover:bg-emerald-50"
+                        }`}
+                      >
+                        <div className="mb-2 text-2xl">
+                          {roomType.includes("Double")
+                            ? "🌟"
+                            : roomType.includes("Deluxe")
+                              ? "🏨"
+                              : "🛏️"}
+                        </div>
+                        <div className="display-font text-[13px] font-semibold text-slate-900">
+                          {roomType}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-7">
+                  <p className="mb-4 text-xs font-semibold tracking-[0.2px] text-slate-900">
+                    Preferred Vehicle *
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {VEHICLE_TYPES.map((vehicle) => (
+                      <button
+                        key={vehicle}
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            vehicleType: vehicle,
+                          }))
+                        }
+                        className={`flex items-center gap-4 rounded-xl border-2 p-4 text-left transition ${
+                          form.vehicleType === vehicle
+                            ? "border-primary bg-emerald-50"
+                            : "border-slate-200 hover:border-primary"
+                        }`}
+                      >
+                        <div className="flex h-13.5 w-20 flex-none items-center justify-center rounded-lg bg-slate-100 text-2xl">
+                          {vehicle.includes("Cruiser")
+                            ? "🚙"
+                            : vehicle.includes("Hiace") ||
+                                vehicle.includes("Coaster")
+                              ? "🚌"
+                              : "🚗"}
+                        </div>
+                        <div>
+                          <div className="display-font text-[14px] font-semibold text-slate-900">
+                            {vehicle}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {vehicle.includes("BRV")
+                              ? "7 seats · Sedan SUV"
+                              : vehicle.includes("Hiace")
+                                ? "10–14 seats · Van"
+                                : vehicle.includes("Coaster")
+                                  ? "Large group transport"
+                                  : "Premium 4×4 travel"}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  {error
+                    ? error
+                    : "Your existing booking flow remains unchanged. Submitting will still create a Convex booking and redirect to the itinerary page."}
+                </div>
+
+                <FormNav hint="Step 3 of 3" back={() => setStep(2)}>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="display-font rounded-[10px] bg-amber-500 px-8 py-3 text-sm font-bold text-slate-950 transition hover:bg-[#E08B06] disabled:opacity-60"
+                  >
+                    {isSubmitting
+                      ? "Creating itinerary..."
+                      : "Create Itinerary →"}
+                  </button>
+                </FormNav>
+              </FormCard>
+            ) : null}
+          </form>
         </div>
 
-        <form
-          className="relative"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            setError(null);
-            setDialogMessage(null);
-            setIsSubmitting(true);
-            try {
-              const bookingId = await createBooking(form);
-              router.push(`/design-trip/${bookingId}`);
-            } catch (submitError) {
-              const message =
-                submitError instanceof Error ? submitError.message : "Unable to create booking.";
-              const normalizedMessage = message.includes("No active package matches the selected trip criteria yet.")
-                ? "No package matches your selected trip criteria yet."
-                : "Unable to create your itinerary right now. Please try again.";
-              setError(normalizedMessage);
-              setDialogMessage(normalizedMessage);
-            } finally {
-              setIsSubmitting(false);
+        <aside className="h-fit rounded-[20px] border border-slate-200 bg-white p-7 shadow-[0_2px_16px_rgba(0,0,0,0.04)] lg:sticky lg:top-22">
+          <h2 className="display-font mb-5 text-base font-bold text-slate-900">
+            📋 Trip Summary
+          </h2>
+          <SummaryRow
+            label="Traveler"
+            value={form.customerName || "Not provided"}
+          />
+          <SummaryRow label="Departure" value={form.departureCity} />
+          <SummaryRow label="Destination" value={form.destination} />
+          <SummaryRow
+            label="Dates"
+            value={
+              form.startDate && form.endDate
+                ? `${form.startDate} → ${form.endDate}`
+                : "Not selected"
             }
-          }}
-        >
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            <Field label="Full name" hint="Enter the lead traveler's full name.">
-              <input
-                className="input-base"
-                placeholder="e.g. Ali Khan"
-                value={form.customerName}
-                onChange={(event) => setForm((current) => ({ ...current, customerName: event.target.value }))}
-                required
-              />
-            </Field>
-
-            <Field label="Email address" hint="We will use this for itinerary details and booking updates.">
-              <input
-                className="input-base"
-                type="email"
-                placeholder="e.g. ali@example.com"
-                value={form.customerEmail}
-                onChange={(event) => setForm((current) => ({ ...current, customerEmail: event.target.value }))}
-                required
-              />
-            </Field>
-
-            <Field label="Phone / WhatsApp number" hint="Use a number where we can quickly contact you.">
-              <input
-                className="input-base"
-                placeholder="e.g. +92 300 1234567"
-                value={form.customerPhone}
-                onChange={(event) => setForm((current) => ({ ...current, customerPhone: event.target.value }))}
-                required
-              />
-            </Field>
-
-            <Field label="Departure city" hint="Choose the city where your trip will begin.">
-              <SelectShell icon={<MapPinned className="size-4 text-primary" />}>
-                <select
-                  className="select-base"
-                  value={form.departureCity}
-                  onChange={(event) => setForm((current) => ({ ...current, departureCity: event.target.value }))}
-                >
-                  {DEPARTURE_CITIES.map((city) => (
-                    <option key={city}>{city}</option>
-                  ))}
-                </select>
-              </SelectShell>
-            </Field>
-
-            <Field label="Destination" hint="Select the main destination you want to visit.">
-              <SelectShell icon={<Sparkles className="size-4 text-primary" />}>
-                <select
-                  className="select-base"
-                  value={form.destination}
-                  onChange={(event) => setForm((current) => ({ ...current, destination: event.target.value }))}
-                >
-                  {DESTINATIONS.map((destination) => (
-                    <option key={destination}>{destination}</option>
-                  ))}
-                </select>
-              </SelectShell>
-            </Field>
-
-            <div className="rounded-[24px] border border-emerald-100 bg-[linear-gradient(135deg,rgba(13,124,110,0.08),rgba(255,255,255,0.9))] px-5 py-4 text-sm text-slate-600 shadow-[0_18px_40px_rgba(13,124,110,0.08)]">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-2xl bg-white text-primary shadow-sm">
-                  <CalendarDays className="size-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Trip duration</p>
-                  <p className="mt-1 font-semibold text-slate-900">{durationLabel}</p>
-                </div>
-              </div>
+          />
+          <SummaryRow label="Travelers" value={`${totalTravelers} total`} />
+          <SummaryRow label="Class" value={form.travelClass} />
+          <SummaryRow label="Room Type" value={form.roomType} />
+          <SummaryRow label="Vehicle" value={form.vehicleType} />
+          <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[13px] font-semibold text-emerald-900">
+                Estimated duration
+              </span>
+              <span className="display-font text-[22px] font-bold text-primary">
+                {durationLabel}
+              </span>
             </div>
-
-            <Field label="Trip start date" hint="Choose the day you want to start traveling.">
-              <DateShell>
-                <input
-                  className="date-base"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(event) => setForm((current) => ({ ...current, startDate: event.target.value }))}
-                  required
-                />
-              </DateShell>
-            </Field>
-
-            <Field label="Trip end date" hint="Choose the day your trip should end.">
-              <DateShell>
-                <input
-                  className="date-base"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(event) => setForm((current) => ({ ...current, endDate: event.target.value }))}
-                  required
-                />
-              </DateShell>
-            </Field>
-
-            <Field label="Number of adults" hint="Enter the total number of adult travelers.">
-              <input
-                className="input-base"
-                type="number"
-                min="1"
-                value={form.adults}
-                onChange={(event) => setForm((current) => ({ ...current, adults: Number(event.target.value) }))}
-                required
-              />
-            </Field>
-
-            <Field label="Number of children" hint="Enter the total number of child travelers.">
-              <input
-                className="input-base"
-                type="number"
-                min="0"
-                value={form.children}
-                onChange={(event) => setForm((current) => ({ ...current, children: Number(event.target.value) }))}
-                required
-              />
-            </Field>
-
-            <Field label="Preferred room type" hint="Choose the accommodation style you prefer.">
-              <SelectShell>
-                <select
-                  className="select-base"
-                  value={form.roomType}
-                  onChange={(event) => setForm((current) => ({ ...current, roomType: event.target.value }))}
-                >
-                  {ROOM_TYPES.map((room) => (
-                    <option key={room}>{room}</option>
-                  ))}
-                </select>
-              </SelectShell>
-            </Field>
-
-            <Field label="Travel class" hint="Choose the package class you want for this trip.">
-              <SelectShell>
-                <select
-                  className="select-base capitalize"
-                  value={form.travelClass}
-                  onChange={(event) => setForm((current) => ({ ...current, travelClass: event.target.value as TravelClass }))}
-                >
-                  {TRAVEL_CLASSES.map((travelClass) => (
-                    <option key={travelClass} value={travelClass}>
-                      {travelClass}
-                    </option>
-                  ))}
-                </select>
-              </SelectShell>
-            </Field>
-
-            <Field label="Preferred vehicle" hint="Select the vehicle you want if a matching package is available.">
-              <SelectShell>
-                <select
-                  className="select-base"
-                  value={form.vehicleType}
-                  onChange={(event) => setForm((current) => ({ ...current, vehicleType: event.target.value }))}
-                >
-                  {VEHICLE_TYPES.map((vehicle) => (
-                    <option key={vehicle}>{vehicle}</option>
-                  ))}
-                </select>
-              </SelectShell>
-            </Field>
           </div>
-
-          <div className="mt-4">
-            <Field label="Special requests" hint="Add dietary notes, accessibility needs, custom stopovers, or other travel requirements.">
-              <textarea
-                className="textarea-base min-h-32"
-                placeholder="Write any special requirements here"
-                value={form.specialRequests}
-                onChange={(event) => setForm((current) => ({ ...current, specialRequests: event.target.value }))}
-              />
-            </Field>
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 rounded-[24px] bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className={`text-sm ${error ? "text-rose-600" : "text-slate-600"}`}>
-              {error ? error : "We will create the booking, match a package, and redirect you to the editable itinerary."}
-            </p>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Creating booking..." : "Create itinerary"}
-            </button>
-          </div>
-        </form>
-      </div>
+        </aside>
+      </section>
 
       {dialogMessage ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
           <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Trip not available</p>
-            <h3 className="display-font mt-3 text-2xl font-semibold text-ink">No matching package found</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{dialogMessage}</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+              Trip not available
+            </p>
+            <h3 className="display-font mt-3 text-2xl font-semibold text-ink">
+              No matching package found
+            </h3>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              {dialogMessage}
+            </p>
             <div className="mt-6 flex justify-end">
               <button
                 type="button"
@@ -306,47 +568,74 @@ export function DesignTripClient() {
   );
 }
 
+function FormCard({
+  title,
+  sub,
+  children,
+}: {
+  title: string;
+  sub: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[20px] border border-slate-200 bg-white p-10 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+      <h2 className="display-font text-xl font-bold text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm text-slate-500">{sub}</p>
+      <div className="mt-8">{children}</div>
+    </div>
+  );
+}
+
 function Field({
   label,
-  hint,
-  children
+  children,
 }: {
   label: string;
-  hint: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="space-y-2">
-      <div className="space-y-1">
-        <span className="block text-sm font-semibold text-slate-900">{label}</span>
-        <span className="block text-xs leading-5 text-slate-500">{hint}</span>
-      </div>
+      <span className="text-xs font-semibold text-slate-900">{label}</span>
       {children}
     </label>
   );
 }
 
-function SelectShell({
+function FormNav({
+  hint,
+  back,
   children,
-  icon
 }: {
+  hint: string;
+  back?: () => void;
   children: React.ReactNode;
-  icon?: React.ReactNode;
 }) {
   return (
-    <div className="relative">
-      {icon ? <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">{icon}</div> : null}
-      <div className={icon ? "[&_select]:pl-11" : ""}>{children}</div>
-      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+    <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
+      <div className="flex items-center gap-4">
+        {back ? (
+          <button
+            type="button"
+            onClick={back}
+            className="display-font rounded-[10px] border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-500 transition hover:border-slate-400 hover:text-slate-900"
+          >
+            ← Back
+          </button>
+        ) : (
+          <span className="text-xs text-slate-500">{hint}</span>
+        )}
+        {back ? <span className="text-xs text-slate-500">{hint}</span> : null}
+      </div>
+      {children}
     </div>
   );
 }
 
-function DateShell({ children }: { children: React.ReactNode }) {
+function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="relative">
-      {children}
-      <CalendarDays className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+    <div className="flex items-center justify-between border-b border-slate-200 py-2.5">
+      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-[13px] font-semibold text-slate-900">{value}</span>
     </div>
   );
 }

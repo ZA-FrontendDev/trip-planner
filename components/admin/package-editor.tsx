@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
 import { DEPARTURE_CITIES, DESTINATIONS, TRAVEL_CLASSES } from "@/lib/trip-options";
+import { AdminField } from "@/components/admin/admin-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -79,7 +80,7 @@ function PackageEditorForm({
       </CardHeader>
       <CardContent>
         <form
-          className="grid gap-4 md:grid-cols-2"
+          className="grid gap-5 md:grid-cols-2"
           onSubmit={async (event) => {
             event.preventDefault();
             const payload = {
@@ -97,37 +98,67 @@ function PackageEditorForm({
             router.push(`/admin/packages/${nextId as string}/itinerary`);
           }}
         >
-          <input className="input-base" placeholder="Title" value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required />
-          <input className="input-base" placeholder="Slug" value={form.slug} onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))} required />
-          <select className="input-base" value={form.destination} onChange={(event) => setForm((current) => ({ ...current, destination: event.target.value }))}>
-            {DESTINATIONS.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-          <select className="input-base" value={form.departureCity} onChange={(event) => setForm((current) => ({ ...current, departureCity: event.target.value }))}>
-            {DEPARTURE_CITIES.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-          <input className="input-base" type="number" min="1" value={form.durationDays} onChange={(event) => setForm((current) => ({ ...current, durationDays: Number(event.target.value) }))} required />
-          <input className="input-base" type="number" min="0" value={form.basePrice} onChange={(event) => setForm((current) => ({ ...current, basePrice: Number(event.target.value) }))} required />
-          <input className="input-base" type="number" min="1" value={form.maxPersons} onChange={(event) => setForm((current) => ({ ...current, maxPersons: Number(event.target.value) }))} required />
-          <select className="input-base" value={form.travelClass} onChange={(event) => setForm((current) => ({ ...current, travelClass: event.target.value as "economy" | "business" }))}>
-            {TRAVEL_CLASSES.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          <input className="input-base md:col-span-2" placeholder="Cover image URL" value={form.coverImage} onChange={(event) => setForm((current) => ({ ...current, coverImage: event.target.value }))} required />
-          <select className="input-base" value={form.defaultVehicleId} onChange={(event) => setForm((current) => ({ ...current, defaultVehicleId: event.target.value }))}>
-            <option value="">No default vehicle</option>
-            {vehicles?.map((vehicle: any) => (
-              <option key={vehicle._id} value={vehicle._id as string}>
-                {vehicle.name}
-              </option>
-            ))}
-          </select>
+          <AdminField label="Package title" hint="Enter the public title shown to travelers and admins.">
+            <input className="input-base" placeholder="e.g. Astore | Minimarg | Deosai" value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required />
+          </AdminField>
+
+          <AdminField label="Package slug" hint="Enter a unique URL-friendly identifier such as astore-minimarg-deosai.">
+            <input className="input-base" placeholder="astore-minimarg-deosai" value={form.slug} onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))} required />
+          </AdminField>
+
+          <AdminField label="Destination" hint="Select the main destination this package belongs to.">
+            <select className="select-base" value={form.destination} onChange={(event) => setForm((current) => ({ ...current, destination: event.target.value }))}>
+              {DESTINATIONS.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </AdminField>
+
+          <AdminField label="Departure city" hint="Select the city where this package starts.">
+            <select className="select-base" value={form.departureCity} onChange={(event) => setForm((current) => ({ ...current, departureCity: event.target.value }))}>
+              {DEPARTURE_CITIES.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </AdminField>
+
+          <AdminField label="Duration in days" hint="Enter the total number of itinerary days for this package.">
+            <input className="input-base" type="number" min="1" value={form.durationDays} onChange={(event) => setForm((current) => ({ ...current, durationDays: Number(event.target.value) }))} required />
+          </AdminField>
+
+          <AdminField label="Base package price" hint="Enter the base traveler price in PKR before hotel and vehicle adjustments.">
+            <input className="input-base" type="number" min="0" value={form.basePrice} onChange={(event) => setForm((current) => ({ ...current, basePrice: Number(event.target.value) }))} required />
+          </AdminField>
+
+          <AdminField label="Maximum persons" hint="Set the maximum supported group size for this package.">
+            <input className="input-base" type="number" min="1" value={form.maxPersons} onChange={(event) => setForm((current) => ({ ...current, maxPersons: Number(event.target.value) }))} required />
+          </AdminField>
+
+          <AdminField label="Travel class" hint="Choose whether this package is economy or business class.">
+            <select className="select-base" value={form.travelClass} onChange={(event) => setForm((current) => ({ ...current, travelClass: event.target.value as "economy" | "business" }))}>
+              {TRAVEL_CLASSES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </AdminField>
+
+          <AdminField label="Cover image URL" hint="Enter the main package image URL used on the frontend package listing." className="md:col-span-2">
+            <input className="input-base" placeholder="https://..." value={form.coverImage} onChange={(event) => setForm((current) => ({ ...current, coverImage: event.target.value }))} required />
+          </AdminField>
+
+          <AdminField label="Default vehicle" hint="Optionally assign a default vehicle for new bookings created from this package.">
+            <select className="select-base" value={form.defaultVehicleId} onChange={(event) => setForm((current) => ({ ...current, defaultVehicleId: event.target.value }))}>
+              <option value="">No default vehicle</option>
+              {vehicles?.map((vehicle: any) => (
+                <option key={vehicle._id} value={vehicle._id as string}>
+                  {vehicle.name}
+                </option>
+              ))}
+            </select>
+          </AdminField>
+
           <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
             <input type="checkbox" checked={form.isActive} onChange={(event) => setForm((current) => ({ ...current, isActive: event.target.checked }))} />
             Package active and bookable
