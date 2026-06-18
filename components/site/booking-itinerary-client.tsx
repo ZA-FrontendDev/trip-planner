@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import {
+  BedDouble,
   CalendarDays,
   CarFront,
   ChevronDown,
@@ -15,8 +17,6 @@ import {
   Users,
 } from "lucide-react";
 
-import hotelImage from "@/hotel.png";
-import roomImage from "@/room.png";
 import { api } from "@/convex/_generated/api";
 import { formatPrice } from "@/lib/format-price";
 import type {
@@ -25,40 +25,146 @@ import type {
   SiteHotel,
 } from "@/lib/trip-types";
 import { BootstrapData } from "@/components/shared/bootstrap-data";
+import type { TripRequestArgs } from "@/convex/lib/trip";
 
 type DialogState = {
   type: "hotel" | "room";
   day: ItineraryDayView;
 } | null;
 
-export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
-  const booking = useQuery(api.bookings.getItinerary, {
-    bookingId: bookingId as never,
-  });
+type PreviewOverride = {
+  hotelId: string;
+  roomType: string;
+};
+
+export function BookingItineraryClient({
+  bookingId,
+  previewRequest,
+}: {
+  bookingId?: string;
+  previewRequest?: TripRequestArgs;
+}) {
+  const router = useRouter();
+  const booking = useQuery(
+    api.bookings.getItinerary,
+    bookingId ? { bookingId: bookingId as never } : "skip",
+  );
+  const preview = useQuery(
+    api.bookings.previewItinerary,
+    previewRequest ? (previewRequest as never) : "skip",
+  );
+  const createBooking = useMutation(api.bookings.create);
   const changeHotel = useMutation(api.bookings.changeHotel);
   const changeRoom = useMutation(api.bookings.changeRoom);
   const changeVehicle = useMutation(api.bookings.changeVehicle);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [dialogState, setDialogState] = useState<DialogState>(null);
+  const [previewVehicleId, setPreviewVehicleId] = useState<string | null>(null);
+  const [previewOverrides, setPreviewOverrides] = useState<Record<string, PreviewOverride>>({});
+
+  const itineraryData = (bookingId ? booking : preview) as BookingItineraryView | null | undefined;
 
   const travelerLabel = useMemo(() => {
-    if (!booking) return "";
-    const total = booking.adults + booking.children;
+    if (!itineraryData) return "";
+    const total = itineraryData.adults + itineraryData.children;
     return `${total} traveler${total === 1 ? "" : "s"}`;
-  }, [booking]);
+  }, [itineraryData]);
 
-  if (!booking) {
+  const bookingDataValue = itineraryData ?? null;
+  const isPreview = bookingDataValue?.isPreview === true;
+  const selectedVehicleId = isPreview
+    ? (previewVehicleId ?? bookingDataValue?.vehicle?._id ?? bookingDataValue?.package.defaultVehicleId ?? null)
+    : bookingDataValue?.vehicle?._id ?? null;
+  const selectedVehicle = bookingDataValue
+    ? bookingDataValue.vehicleOptions.find((vehicle) => vehicle._id === selectedVehicleId) ?? bookingDataValue.vehicle
+    : null;
+
+  const previewDays = useMemo(() => {
+    if (!bookingDataValue) {
+      return [];
+    }
+
+    if (!isPreview) {
+      return bookingDataValue.days;
+    }
+
+    return bookingDataValue.days.map((day) => {
+      const override = previewOverrides[day._id];
+      if (!override) {
+        return day;
+      }
+
+      const hotel = bookingDataValue.hotelOptions.find((item) => item._id === override.hotelId) ?? day.hotel;
+      return {
+        ...day,
+        hotel,
+        roomType: override.roomType,
+      };
+    });
+  }, [bookingDataValue, isPreview, previewOverrides]);
+
+  const displayTotalPrice = useMemo(() => {
+    if (!bookingDataValue) {
+      return 0;
+    }
+
+    if (!isPreview) {
+      return bookingDataValue.totalPrice;
+    }
+
+    const durationDays = bookingDataValue.days.length;
+    const basePreviewTotal = bookingDataValue.totalPrice;
+    const defaultVehicle = bookingDataValue.vehicleOptions.find(
+      (vehicle) =>
+        vehicle._id ===
+        (bookingDataValue.vehicle?._id ?? bookingDataValue.package.defaultVehicleId),
+    );
+    const defaultVehicleCost = (defaultVehicle?.pricePerDay ?? 0) * durationDays;
+    const currentVehicleCost = (selectedVehicle?.pricePerDay ?? 0) * durationDays;
+    const vehicleDelta = currentVehicleCost - defaultVehicleCost;
+
+    let hotelDelta = 0;
+    for (const day of bookingDataValue.days) {
+      const override = previewOverrides[day._id];
+      if (!override || !day.hotel) {
+        continue;
+      }
+      const defaultRate =
+        day.hotel.roomTypes.find((room) => room.type === day.roomType)?.pricePerNight ??
+        day.hotel.pricePerNight;
+      const overrideHotel =
+        bookingDataValue.hotelOptions.find((hotel) => hotel._id === override.hotelId) ?? day.hotel;
+      const overrideRate =
+        overrideHotel.roomTypes.find((room) => room.type === override.roomType)?.pricePerNight ??
+        overrideHotel.pricePerNight;
+      hotelDelta += (overrideRate - defaultRate) * day.roomQuantity;
+    }
+
+    return Math.max(basePreviewTotal + vehicleDelta + hotelDelta, 0);
+  }, [bookingDataValue, isPreview, previewOverrides, selectedVehicle]);
+
+  if (itineraryData === undefined) {
     return (
       <div className="space-y-6">
         <BootstrapData />
         <div className="card-surface p-8 text-sm text-slate-600">
-          Loading booking itinerary...
+          Loading itinerary...
         </div>
       </div>
     );
   }
 
-  const bookingData = booking as BookingItineraryView;
+  if (itineraryData === null) {
+    return (
+      <div className="space-y-6">
+        <div className="card-surface p-8 text-sm text-slate-600">
+          No package matches your selected trip criteria yet.
+        </div>
+      </div>
+    );
+  }
+
+  const bookingData = itineraryData;
 
   return (
     <div className="space-y-6">
@@ -92,17 +198,17 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
               />
               <MetaItem
                 icon={<CarFront className="h-4 w-4" />}
-                label={bookingData.vehicle?.name ?? "Vehicle pending"}
+                label={selectedVehicle?.name ?? "Vehicle pending"}
               />
             </div>
           </div>
           <div className="space-y-4 xl:min-w-90">
-            {bookingData.vehicle?.images?.[0] ? (
+            {selectedVehicle?.images?.[0] ? (
               <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
                 <div className="relative h-36 w-full">
                   <Image
-                    src={bookingData.vehicle.images[0]}
-                    alt={bookingData.vehicle.name}
+                    src={selectedVehicle.images[0]}
+                    alt={selectedVehicle.name}
                     fill
                     className="object-cover"
                     unoptimized
@@ -110,7 +216,7 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                 </div>
                 <div className="px-4 py-3">
                   <p className="text-sm font-semibold text-slate-900">
-                    {bookingData.vehicle.name}
+                    {selectedVehicle.name}
                   </p>
                   <p className="text-xs text-slate-500">Selected vehicle</p>
                 </div>
@@ -119,15 +225,20 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
             <p className="text-right text-sm text-slate-500">
               Trip total{" "}
               <span className="display-font text-2xl font-semibold text-primary">
-                {formatPrice(bookingData.totalPrice)}
+                {formatPrice(displayTotalPrice)}
               </span>
             </p>
             <div className="flex flex-col gap-3 sm:flex-row xl:justify-end">
               <SelectShell>
                 <select
                   className="select-base max-w-full sm:max-w-60"
-                  value={bookingData.vehicle?._id ?? ""}
+                  value={selectedVehicleId ?? ""}
                   onChange={async (event) => {
+                    if (isPreview) {
+                      setPreviewVehicleId(event.target.value);
+                      return;
+                    }
+
                     setBusyKey("vehicle");
                     await changeVehicle({
                       bookingId: bookingData._id as never,
@@ -143,8 +254,49 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                   ))}
                 </select>
               </SelectShell>
-              <button className="inline-flex h-13 items-center justify-center rounded-[18px] bg-primary px-6 text-sm font-semibold text-white transition hover:bg-primary/90">
-                Book
+              <button
+                className="inline-flex h-13 items-center justify-center rounded-[18px] bg-primary px-6 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                disabled={busyKey === "create-booking"}
+                onClick={async () => {
+                  if (isPreview) {
+                    setBusyKey("create-booking");
+                    const nextBookingId = await createBooking({
+                      packageId:
+                        isPreview && previewRequest?.packageId
+                          ? (previewRequest.packageId as never)
+                          : undefined,
+                      vehicleId: selectedVehicleId ? (selectedVehicleId as never) : undefined,
+                      customerName: bookingData.customerName,
+                      customerEmail: bookingData.customerEmail,
+                      customerPhone: bookingData.customerPhone,
+                      departureCity: bookingData.departureCity,
+                      destination: bookingData.package.destination,
+                      startDate: bookingData.startDate,
+                      endDate: bookingData.endDate,
+                      adults: bookingData.adults,
+                      children: bookingData.children,
+                      roomType: bookingData.roomType,
+                      travelClass: bookingData.travelClass,
+                      vehicleType: selectedVehicle?.name ?? "",
+                      specialRequests: bookingData.specialRequests,
+                      hotelOverrides: Object.entries(previewOverrides).map(([dayId, override]) => ({
+                        dayId: dayId as never,
+                        hotelId: override.hotelId as never,
+                        roomType: override.roomType,
+                      })),
+                    });
+                    router.push(`/design-trip/${nextBookingId}`);
+                    return;
+                  }
+
+                  return;
+                }}
+              >
+                {isPreview
+                  ? busyKey === "create-booking"
+                    ? "Creating booking..."
+                    : "Book"
+                  : "Booked Trip"}
               </button>
             </div>
           </div>
@@ -158,9 +310,9 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
               Itinerary
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Day titles, routes, overnight locations, and places covered come
-              from the package itinerary stored in Convex. Dates are generated
-              from your selected start date.
+              {isPreview
+                ? "This is a preview of the generated trip. The booking will only be created after you click Book."
+                : "Day titles, routes, overnight locations, and places covered come from the package itinerary stored in Convex. Dates are generated from your selected start date."}
             </p>
           </div>
         </div>
@@ -192,7 +344,7 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
         ) : null}
 
         <div className="mt-6 space-y-5">
-          {bookingData.days.map((day) => {
+          {previewDays.map((day) => {
             const relevantHotels = getRelevantHotels(
               bookingData.hotelOptions,
               day,
@@ -223,6 +375,11 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                           </span>
                         ) : null}
                       </div>
+                      <p className="mt-1 text-sm font-medium text-slate-600">
+                        {(day.startDestination ?? day.overnightLocation) +
+                          " to " +
+                          (day.endDestination ?? day.overnightLocation)}
+                      </p>
                       <p className="mt-1 text-sm leading-6 text-slate-700">
                         {day.description}
                       </p>
@@ -317,7 +474,7 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                       <ActionCard
                         title="Change Hotel"
                         description="Swap the hotel for this stop from available Convex hotel records."
-                        image={hotelImage}
+                        icon={<Hotel className="size-7" />}
                         buttonLabel="Change Hotel"
                         busy={busyKey === `hotel-${day._id}`}
                         onClick={() => setDialogState({ type: "hotel", day })}
@@ -328,7 +485,7 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
                       <ActionCard
                         title="Change Room"
                         description="Select a different room type for the currently assigned hotel."
-                        image={roomImage}
+                        icon={<BedDouble className="size-7" />}
                         buttonLabel="Change Room"
                         busy={busyKey === `room-${day._id}`}
                         onClick={() => setDialogState({ type: "room", day })}
@@ -360,8 +517,23 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
           dialogState={dialogState}
           bookingData={bookingData}
           busyKey={busyKey}
+          isPreview={isPreview}
           onClose={() => setDialogState(null)}
           onSelectHotel={async (hotel) => {
+            if (isPreview) {
+              setPreviewOverrides((current) => ({
+                ...current,
+                [dialogState.day._id]: {
+                  hotelId: hotel._id,
+                  roomType:
+                    hotel.roomTypes[0]?.type ??
+                    dialogState.day.roomType ??
+                    bookingData.roomType,
+                },
+              }));
+              setDialogState(null);
+              return;
+            }
             setBusyKey(`hotel-${dialogState.day._id}`);
             await changeHotel({
               bookingId: bookingData._id as never,
@@ -376,6 +548,17 @@ export function BookingItineraryClient({ bookingId }: { bookingId: string }) {
             setDialogState(null);
           }}
           onSelectRoom={async (roomType) => {
+            if (isPreview) {
+              setPreviewOverrides((current) => ({
+                ...current,
+                [dialogState.day._id]: {
+                  hotelId: current[dialogState.day._id]?.hotelId ?? dialogState.day.hotel?._id ?? "",
+                  roomType,
+                },
+              }));
+              setDialogState(null);
+              return;
+            }
             setBusyKey(`room-${dialogState.day._id}`);
             await changeRoom({
               bookingId: bookingData._id as never,
@@ -412,7 +595,7 @@ function SelectShell({ children }: { children: React.ReactNode }) {
 function ActionCard({
   title,
   description,
-  image,
+  icon,
   buttonLabel,
   busy,
   disabled,
@@ -420,7 +603,7 @@ function ActionCard({
 }: {
   title: string;
   description: string;
-  image: typeof hotelImage;
+  icon: React.ReactNode;
   buttonLabel: string;
   busy: boolean;
   disabled?: boolean;
@@ -429,8 +612,10 @@ function ActionCard({
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfb_100%)] shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
       <div className="grid gap-4 p-4 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-center">
-        <div className="overflow-hidden rounded-[18px] border border-slate-200/70 bg-slate-50">
-          <Image src={image} alt={title} className="h-24 w-full object-cover" />
+        <div className="flex h-24 items-center justify-center overflow-hidden rounded-[18px] border border-slate-200/70 bg-slate-50 text-primary">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-sm">
+            {icon}
+          </div>
         </div>
         <div>
           <p className="font-semibold text-slate-900">{title}</p>
@@ -453,6 +638,7 @@ function CustomizerDialog({
   dialogState,
   bookingData,
   busyKey,
+  isPreview,
   onClose,
   onSelectHotel,
   onSelectRoom,
@@ -460,6 +646,7 @@ function CustomizerDialog({
   dialogState: NonNullable<DialogState>;
   bookingData: BookingItineraryView;
   busyKey: string | null;
+  isPreview: boolean;
   onClose: () => void;
   onSelectHotel: (hotel: SiteHotel) => Promise<void>;
   onSelectRoom: (roomType: string) => Promise<void>;
@@ -477,13 +664,17 @@ function CustomizerDialog({
         <div className="grid gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
           <div className="relative min-h-55 bg-slate-100">
             <Image
-              src={isHotelDialog ? hotelImage : roomImage}
+              src={bookingData.package.coverImage}
               alt={isHotelDialog ? "Hotel selection" : "Room selection"}
               fill
               className="object-cover"
+              unoptimized
             />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),rgba(15,23,42,0.52))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.1),rgba(15,23,42,0.7))]" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+              <div className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-white/18 backdrop-blur">
+                {isHotelDialog ? <Hotel className="size-6" /> : <BedDouble className="size-6" />}
+              </div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/75">
                 {isHotelDialog ? "Change Hotel" : "Change Room"}
               </p>
@@ -522,7 +713,7 @@ function CustomizerDialog({
                       type="button"
                       className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left transition hover:border-primary"
                       onClick={() => void onSelectHotel(hotel)}
-                      disabled={busyKey === `hotel-${dialogState.day._id}`}
+                      disabled={!isPreview && busyKey === `hotel-${dialogState.day._id}`}
                     >
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -557,7 +748,7 @@ function CustomizerDialog({
                       type="button"
                       className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left transition hover:border-primary"
                       onClick={() => void onSelectRoom(room.type)}
-                      disabled={busyKey === `room-${dialogState.day._id}`}
+                      disabled={!isPreview && busyKey === `room-${dialogState.day._id}`}
                     >
                       <div>
                         <p className="font-semibold text-slate-900">

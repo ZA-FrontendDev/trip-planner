@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useConvex } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
 import { BootstrapData } from "@/components/shared/bootstrap-data";
@@ -31,12 +31,24 @@ type DesignTripFormState = {
   specialRequests: string;
 };
 
+type SuggestedPackage = {
+  packageId: string;
+  destination: string;
+  departureCity: string;
+  durationDays: number;
+  title: string;
+  coverImage: string;
+  basePrice: number;
+  travelClass: string;
+};
+
 export function DesignTripClient() {
   const router = useRouter();
-  const createBooking = useMutation(api.bookings.create);
+  const convex = useConvex();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<SuggestedPackage[]>([]);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<DesignTripFormState>({
     customerName: "",
@@ -126,15 +138,57 @@ export function DesignTripClient() {
               event.preventDefault();
               setError(null);
               setDialogMessage(null);
+              setSuggestions([]);
               setIsSubmitting(true);
               try {
-                const bookingId = await createBooking(form);
-                router.push(`/design-trip/${bookingId}`);
+                const preview = await convex.query(api.bookings.previewItinerary, form);
+                if (!preview) {
+                  const hints = await convex.query(api.bookings.getAvailabilityHints, {
+                    destination: form.destination,
+                    departureCity: form.departureCity,
+                    startDate: form.startDate,
+                    endDate: form.endDate,
+                    adults: form.adults,
+                    children: form.children,
+                    travelClass: form.travelClass,
+                  });
+                  const nextSuggestions = dedupeSuggestions([
+                    ...hints.exactRouteAlternatives,
+                    ...hints.sameDestinationAlternatives,
+                    ...hints.sameDepartureAlternatives,
+                    ...hints.fallbackAlternatives,
+                  ]).slice(0, 3);
+                  const availabilityMessage =
+                    nextSuggestions.length > 0
+                      ? `No exact package matched ${form.departureCity} to ${form.destination} for ${getDurationDays(form.startDate, form.endDate)} days. These available packages are the closest options.`
+                      : "No package matches your selected trip criteria yet.";
+                  setError(availabilityMessage);
+                  setDialogMessage(availabilityMessage);
+                  setSuggestions(nextSuggestions);
+                  return;
+                }
+
+                const params = new URLSearchParams({
+                  customerName: form.customerName,
+                  customerEmail: form.customerEmail,
+                  customerPhone: form.customerPhone,
+                  departureCity: form.departureCity,
+                  destination: form.destination,
+                  startDate: form.startDate,
+                  endDate: form.endDate,
+                  adults: String(form.adults),
+                  children: String(form.children),
+                  roomType: form.roomType,
+                  travelClass: form.travelClass,
+                  vehicleType: form.vehicleType,
+                  specialRequests: form.specialRequests,
+                });
+                router.push(`/design-trip/preview?${params.toString()}`);
               } catch (submitError) {
                 const message =
                   submitError instanceof Error
                     ? submitError.message
-                    : "Unable to create booking.";
+                    : "Unable to create itinerary preview.";
                 const normalizedMessage = message.includes(
                   "No active package matches the selected trip criteria yet.",
                 )
@@ -142,6 +196,7 @@ export function DesignTripClient() {
                   : "Unable to create your itinerary right now. Please try again.";
                 setError(normalizedMessage);
                 setDialogMessage(normalizedMessage);
+                setSuggestions([]);
               } finally {
                 setIsSubmitting(false);
               }
@@ -486,7 +541,7 @@ export function DesignTripClient() {
                 <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                   {error
                     ? error
-                    : "Your existing booking flow remains unchanged. Submitting will still create a Convex booking and redirect to the itinerary page."}
+                    : "Create Itinerary now opens a trip preview first. The booking is only created after the traveler clicks Book on the itinerary page."}
                 </div>
 
                 <FormNav hint="Step 3 of 3" back={() => setStep(2)}>
@@ -542,7 +597,7 @@ export function DesignTripClient() {
 
       {dialogMessage ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
-          <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-4xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
               Trip not available
             </p>
@@ -552,11 +607,68 @@ export function DesignTripClient() {
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {dialogMessage}
             </p>
+            {suggestions.length > 0 ? (
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.packageId}
+                    type="button"
+                    className="overflow-hidden rounded-[22px] border border-slate-200 bg-white text-left transition hover:-translate-y-1 hover:border-primary hover:shadow-lg"
+                    onClick={() =>
+                      router.push(
+                        buildSuggestedPreviewUrl(form, suggestion),
+                      )
+                    }
+                  >
+                    <div className="h-36 w-full overflow-hidden bg-slate-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={suggestion.coverImage}
+                        alt={suggestion.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="space-y-3 p-4">
+                      <div>
+                        <p className="display-font text-lg font-semibold text-slate-900">
+                          {suggestion.destination}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {suggestion.departureCity} to {suggestion.destination}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-900">
+                          {suggestion.durationDays} day{suggestion.durationDays === 1 ? "" : "s"}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                          {suggestion.travelClass}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[11px] text-slate-500">Package total</p>
+                          <p className="display-font text-lg font-bold text-primary">
+                            PKR {suggestion.basePrice.toLocaleString("en-PK")}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-primary px-3 py-2 text-xs font-semibold text-white">
+                          View Details
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="mt-6 flex justify-end">
               <button
                 type="button"
                 className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90"
-                onClick={() => setDialogMessage(null)}
+                onClick={() => {
+                  setDialogMessage(null);
+                  setSuggestions([]);
+                }}
               >
                 Close
               </button>
@@ -638,4 +750,52 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       <span className="text-[13px] font-semibold text-slate-900">{value}</span>
     </div>
   );
+}
+
+function getDurationDays(startDate: string, endDate: string) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  return Math.max(
+    Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+    1,
+  );
+}
+
+function buildSuggestedPreviewUrl(
+  form: DesignTripFormState,
+  suggestion: SuggestedPackage,
+) {
+  const start = new Date(form.startDate);
+  const end = new Date(start);
+  end.setDate(end.getDate() + suggestion.durationDays - 1);
+
+  const params = new URLSearchParams({
+    packageId: suggestion.packageId,
+    customerName: form.customerName,
+    customerEmail: form.customerEmail,
+    customerPhone: form.customerPhone,
+    departureCity: suggestion.departureCity,
+    destination: suggestion.destination,
+    startDate: form.startDate,
+    endDate: end.toISOString().slice(0, 10),
+    adults: String(form.adults),
+    children: String(form.children),
+    roomType: form.roomType,
+    travelClass: suggestion.travelClass,
+    vehicleType: "",
+    specialRequests: form.specialRequests,
+  });
+
+  return `/design-trip/preview?${params.toString()}`;
+}
+
+function dedupeSuggestions(items: SuggestedPackage[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.packageId)) {
+      return false;
+    }
+    seen.add(item.packageId);
+    return true;
+  });
 }

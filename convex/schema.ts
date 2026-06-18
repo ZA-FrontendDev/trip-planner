@@ -25,6 +25,8 @@ export default defineSchema({
     date: v.string(),
     title: v.string(),
     description: v.string(),
+    startDestination: v.optional(v.string()),
+    endDestination: v.optional(v.string()),
     overnightLocation: v.string(),
     placesCovered: v.array(
       v.object({

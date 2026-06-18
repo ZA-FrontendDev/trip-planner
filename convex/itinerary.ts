@@ -1,27 +1,84 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { resolvePlaceImage } from "./lib/place_images";
 
 export const getForPackage = query({
   args: {
     packageId: v.id("packages")
   },
   handler: async (ctx, args) => {
+    const packageRecord = await ctx.db.get(args.packageId);
+    if (!packageRecord) {
+      return [];
+    }
+
     const days = (await ctx.db.query("itineraryDays").collect()).filter(
       (day: any) => day.packageId === args.packageId
     );
     const hotels = await ctx.db.query("hotels").collect();
     const assignments = await ctx.db.query("itineraryHotels").collect();
-    return days
-      .sort((a, b) => a.dayNumber - b.dayNumber)
-      .map((day: any) => ({
-        ...day,
-        assignment: assignments.find((assignment: any) => assignment.itineraryDayId === day._id) ?? null,
+
+    const sortedDays = [...days].sort((a, b) => a.dayNumber - b.dayNumber);
+    const dayByNumber = new Map(sortedDays.map((day: any) => [day.dayNumber, day]));
+    const standardDays = Array.from({ length: packageRecord.durationDays }, (_, index) => {
+      const dayNumber = index + 1;
+      const storedDay = dayByNumber.get(dayNumber);
+      const assignment = storedDay
+        ? assignments.find((item: any) => item.itineraryDayId === storedDay._id) ?? null
+        : null;
+
+      return {
+        _id: storedDay?._id ?? null,
+        packageId: args.packageId,
+        dayNumber,
+        date: storedDay?.date ?? "",
+        title: storedDay?.title ?? "",
+        description: storedDay?.description ?? "",
+        startDestination: storedDay?.startDestination ?? "",
+        endDestination: storedDay?.endDestination ?? "",
+        overnightLocation: storedDay?.overnightLocation ?? "",
+        placesCovered: storedDay?.placesCovered ?? [],
+        assignment: assignment
+          ? {
+              _id: assignment._id,
+              hotelId: assignment.hotelId,
+              roomType: assignment.roomType,
+              quantity: assignment.quantity
+            }
+          : null,
         hotelChoices: hotels.filter(
           (hotel: any) =>
-            hotel.location.toLowerCase() === day.overnightLocation.toLowerCase() ||
-            hotel.location.toLowerCase() === day.title.toLowerCase()
-        )
-      }));
+            hotel.location.toLowerCase() === storedDay?.overnightLocation?.toLowerCase() ||
+            hotel.location.toLowerCase() === packageRecord.destination.toLowerCase()
+        ),
+        isExtra: false
+      };
+    });
+
+    const extraDays = sortedDays
+      .filter((day: any) => day.dayNumber > packageRecord.durationDays)
+      .map((day: any) => {
+        const assignment = assignments.find((item: any) => item.itineraryDayId === day._id) ?? null;
+        return {
+          ...day,
+          assignment: assignment
+            ? {
+                _id: assignment._id,
+                hotelId: assignment.hotelId,
+                roomType: assignment.roomType,
+                quantity: assignment.quantity
+              }
+            : null,
+          hotelChoices: hotels.filter(
+            (hotel: any) =>
+              hotel.location.toLowerCase() === day.overnightLocation.toLowerCase() ||
+              hotel.location.toLowerCase() === packageRecord.destination.toLowerCase()
+          ),
+          isExtra: true
+        };
+      });
+
+    return [...standardDays, ...extraDays];
   }
 });
 
@@ -33,6 +90,8 @@ export const saveDay = mutation({
     date: v.string(),
     title: v.string(),
     description: v.string(),
+    startDestination: v.string(),
+    endDestination: v.string(),
     overnightLocation: v.string(),
     placesCovered: v.array(
       v.object({
@@ -52,15 +111,24 @@ export const saveDay = mutation({
       quantity,
       ...dayFields
     } = args;
+    const packageRecord = await ctx.db.get(dayFields.packageId);
+    const normalizedPlaces = dayFields.placesCovered.map((place) => ({
+      name: place.name,
+      image: place.image || resolvePlaceImage(place.name, packageRecord?.coverImage)
+    }));
+    const nextDayFields = {
+      ...dayFields,
+      placesCovered: normalizedPlaces
+    };
 
     const savedDayId =
       dayId ??
       (await ctx.db.insert("itineraryDays", {
-        ...dayFields
+        ...nextDayFields
       }));
 
     if (dayId) {
-      await ctx.db.patch(dayId, dayFields);
+      await ctx.db.patch(dayId, nextDayFields);
     }
 
     const existingAssignment = (await ctx.db.query("itineraryHotels").collect()).find(
@@ -82,6 +150,8 @@ export const saveDay = mutation({
           quantity: quantity ?? 1
         });
       }
+    } else if (existingAssignment) {
+      await ctx.db.delete(existingAssignment._id);
     }
 
     return savedDayId;

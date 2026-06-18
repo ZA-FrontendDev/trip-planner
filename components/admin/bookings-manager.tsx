@@ -105,6 +105,7 @@ export function BookingsManager() {
                     <div>
                       <p className="font-medium">{booking.customerName}</p>
                       <p className="text-xs text-muted-foreground">{booking.customerEmail}</p>
+                      <p className="text-xs text-muted-foreground">{booking.customerPhone}</p>
                     </div>
                   </TableCell>
                   <TableCell>

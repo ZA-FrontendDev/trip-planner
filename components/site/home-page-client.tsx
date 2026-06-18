@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 
@@ -146,15 +147,14 @@ export function HomePageClient() {
                   key={tripPackage._id}
                   className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1.5 hover:shadow-[0_20px_48px_rgba(13,124,110,0.12)]"
                 >
-                  <div
-                    className={`relative h-50 bg-linear-to-br ${
-                      index === 0
-                        ? "from-[#1B4F72] to-[#85C1E9]"
-                        : index === 1
-                          ? "from-[#0B3D36] to-[#1abc9c]"
-                          : "from-[#2C3E50] to-[#BDC3C7]"
-                    }`}
-                  >
+                  <div className="relative h-50 overflow-hidden">
+                    <Image
+                      src={tripPackage.coverImage}
+                      alt={tripPackage.title}
+                      fill
+                      className="object-cover transition duration-500 hover:scale-105"
+                      unoptimized
+                    />
                     <div className="absolute inset-0 bg-linear-to-t from-slate-950/70 to-transparent" />
                     <div className="absolute left-3.5 top-3.5 rounded-md bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-slate-950">
                       {index === 0

@@ -46,6 +46,8 @@ export type ItineraryDayView = {
   date: string;
   title: string;
   description: string;
+  startDestination?: string | null;
+  endDestination?: string | null;
   overnightLocation: string;
   placesCovered: {
     name: string;
@@ -61,6 +63,7 @@ export type ItineraryDayView = {
 export type BookingItineraryView = {
   _id: string;
   status: "pending" | "confirmed" | "cancelled";
+  isPreview?: boolean;
   customerName: string;
   customerEmail: string;
   customerPhone: string;

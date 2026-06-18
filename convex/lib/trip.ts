@@ -1,7 +1,25 @@
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
+import { resolvePlaceImage } from "./place_images";
 
 type ReaderCtx = QueryCtx | MutationCtx;
+
+export type TripRequestArgs = {
+  packageId?: Id<"packages"> | string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  departureCity: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  adults: number;
+  children: number;
+  roomType: string;
+  travelClass: string;
+  vehicleType: string;
+  specialRequests: string;
+};
 
 type PackageRecord = {
   _id: Id<"packages">;
@@ -44,6 +62,8 @@ type ItineraryDayRecord = {
   date?: string;
   title: string;
   description: string;
+  startDestination?: string;
+  endDestination?: string;
   overnightLocation: string;
   placesCovered: {
     name: string;
@@ -75,10 +95,12 @@ export function buildDateForDay(startDate: string, dayNumber: number) {
 }
 
 function getRouteStops(pkg: PackageRecord) {
-  const titleStops = pkg.title
-    .split("|")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const titleStops = pkg.title.includes("|")
+    ? pkg.title
+        .split("|")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
 
   return Array.from(new Set([pkg.departureCity, ...titleStops, pkg.destination]));
 }
@@ -118,13 +140,15 @@ function generateFallbackDay(
     placesCovered: [
       {
         name: destinationStop,
-        image: pkg.coverImage
+        image: resolvePlaceImage(destinationStop, pkg.coverImage)
       },
       {
         name: nextStop,
-        image: pkg.coverImage
+        image: resolvePlaceImage(nextStop, pkg.coverImage)
       }
-    ]
+    ],
+    startDestination: previousDay?.overnightLocation ?? pkg.departureCity,
+    endDestination: overnightLocation
   };
 }
 
@@ -169,24 +193,156 @@ export async function resolveMatchingPackage(
         pkg.destination === args.destination &&
         pkg.departureCity === args.departureCity &&
         pkg.isActive &&
+        pkg.durationDays === args.durationDays &&
         pkg.travelClass === args.travelClass &&
         pkg.maxPersons >= args.totalPersons
     )
-    .sort((a, b) => {
-      const aScore = Math.abs(a.durationDays - args.durationDays);
-      const bScore = Math.abs(b.durationDays - args.durationDays);
-      if (aScore !== bScore) {
-        return aScore - bScore;
-      }
-      return a.basePrice - b.basePrice;
-    });
+    .sort((a, b) => a.basePrice - b.basePrice);
 
   return (candidates[0] as PackageRecord | undefined) ?? null;
+}
+
+export async function getAvailabilityHints(
+  ctx: ReaderCtx,
+  args: {
+    destination: string;
+    departureCity: string;
+    durationDays: number;
+    travelClass: string;
+    totalPersons: number;
+  }
+) {
+  const packages = await ctx.db.query("packages").collect();
+  const eligiblePackages = packages.filter(
+    (pkg: any) =>
+      pkg.isActive &&
+      pkg.travelClass === args.travelClass &&
+      pkg.maxPersons >= args.totalPersons
+  );
+
+  const exactRouteAlternatives = eligiblePackages
+    .filter(
+      (pkg: any) =>
+        pkg.destination === args.destination &&
+        pkg.departureCity === args.departureCity
+    )
+    .sort((a, b) => a.durationDays - b.durationDays)
+    .map((pkg: any) => ({
+      packageId: pkg._id,
+      destination: pkg.destination,
+      departureCity: pkg.departureCity,
+      durationDays: pkg.durationDays,
+      title: pkg.title,
+      coverImage: pkg.coverImage,
+      basePrice: pkg.basePrice,
+      travelClass: pkg.travelClass
+    }));
+
+  const sameDestinationAlternatives = eligiblePackages
+    .filter(
+      (pkg: any) =>
+        pkg.destination === args.destination
+    )
+    .sort((a, b) => {
+      const durationGap = Math.abs(a.durationDays - args.durationDays) - Math.abs(b.durationDays - args.durationDays);
+      if (durationGap !== 0) {
+        return durationGap;
+      }
+      const departureGap = a.departureCity.localeCompare(b.departureCity);
+      if (departureGap !== 0) {
+        return departureGap;
+      }
+      return a.basePrice - b.basePrice;
+    })
+    .slice(0, 6)
+    .map((pkg: any) => ({
+      packageId: pkg._id,
+      destination: pkg.destination,
+      departureCity: pkg.departureCity,
+      durationDays: pkg.durationDays,
+      title: pkg.title,
+      coverImage: pkg.coverImage,
+      basePrice: pkg.basePrice,
+      travelClass: pkg.travelClass
+    }));
+
+  const sameDepartureAlternatives = eligiblePackages
+    .filter(
+      (pkg: any) =>
+        pkg.departureCity === args.departureCity
+    )
+    .sort((a, b) => {
+      const durationGap = Math.abs(a.durationDays - args.durationDays) - Math.abs(b.durationDays - args.durationDays);
+      if (durationGap !== 0) {
+        return durationGap;
+      }
+      return a.destination.localeCompare(b.destination);
+    })
+    .slice(0, 6)
+    .map((pkg: any) => ({
+      packageId: pkg._id,
+      destination: pkg.destination,
+      departureCity: pkg.departureCity,
+      durationDays: pkg.durationDays,
+      title: pkg.title,
+      coverImage: pkg.coverImage,
+      basePrice: pkg.basePrice,
+      travelClass: pkg.travelClass
+    }));
+
+  const fallbackAlternatives = eligiblePackages
+    .sort((a, b) => {
+      const durationGap = Math.abs(a.durationDays - args.durationDays) - Math.abs(b.durationDays - args.durationDays);
+      if (durationGap !== 0) {
+        return durationGap;
+      }
+      return a.destination.localeCompare(b.destination);
+    })
+    .slice(0, 6)
+    .map((pkg: any) => ({
+      packageId: pkg._id,
+      destination: pkg.destination,
+      departureCity: pkg.departureCity,
+      durationDays: pkg.durationDays,
+      title: pkg.title,
+      coverImage: pkg.coverImage,
+      basePrice: pkg.basePrice,
+      travelClass: pkg.travelClass
+    }));
+
+  return {
+    exactRouteAlternatives,
+    sameDestinationAlternatives,
+    sameDepartureAlternatives,
+    fallbackAlternatives
+  };
 }
 
 export async function getVehicleChoices(ctx: ReaderCtx, totalPersons: number) {
   const vehicles = await ctx.db.query("vehicles").collect();
   return vehicles.filter((vehicle: any) => vehicle.capacity >= totalPersons);
+}
+
+export async function resolveSelectedVehicle(
+  ctx: ReaderCtx,
+  pkg: PackageRecord,
+  totalPersons: number,
+  vehicleType: string,
+  preferPackageDefault = false
+) {
+  const availableVehicles = await getVehicleChoices(ctx, totalPersons);
+  const packageDefaultVehicle = availableVehicles.find(
+    (vehicle: any) => vehicle._id === pkg.defaultVehicleId
+  );
+  const requestedVehicle = availableVehicles.find((vehicle: any) => vehicle.name === vehicleType);
+  const selectedVehicle = preferPackageDefault
+    ? packageDefaultVehicle ?? requestedVehicle ?? availableVehicles[0] ?? null
+    : requestedVehicle ?? packageDefaultVehicle ?? availableVehicles[0] ?? null;
+
+  return {
+    availableVehicles,
+    selectedVehicle
+  };
 }
 
 export async function ensureStoredPackageItinerary(
@@ -230,6 +386,8 @@ export async function ensureStoredPackageItinerary(
       date: buildDateForDay(startDate, day.dayNumber),
       title: day.title,
       description: day.description,
+      startDestination: day.startDestination ?? (day.dayNumber === 1 ? pkg.departureCity : completedDays[completedDays.length - 1]?.overnightLocation ?? pkg.destination),
+      endDestination: day.endDestination ?? day.overnightLocation,
       overnightLocation: day.overnightLocation,
       placesCovered: day.placesCovered
     });
@@ -276,12 +434,18 @@ export async function calculateBookingTotal(
   }
 
   const durationDays = calculateDurationDays(booking.startDate, booking.endDate);
-  const baseCost = activePackage.basePrice * booking.adults;
+  const baseCost = activePackage.basePrice;
 
-  let vehicleCost = 0;
+  let defaultVehicleCost = 0;
+  if (activePackage.defaultVehicleId) {
+    const defaultVehicle = await ctx.db.get(activePackage.defaultVehicleId);
+    defaultVehicleCost = (defaultVehicle?.pricePerDay ?? 0) * durationDays;
+  }
+
+  let selectedVehicleCost = defaultVehicleCost;
   if (booking.vehicleId) {
     const vehicle = await ctx.db.get(booking.vehicleId);
-    vehicleCost = (vehicle?.pricePerDay ?? 0) * durationDays;
+    selectedVehicleCost = (vehicle?.pricePerDay ?? 0) * durationDays;
   }
 
   const itineraryDays = (await ctx.db.query("itineraryDays").collect()).filter(
@@ -297,7 +461,7 @@ export async function calculateBookingTotal(
   );
 
   const overrides = booking.hotelOverrides ?? [];
-  let hotelCost = 0;
+  let hotelDelta = 0;
 
   const completedDays = ensureCompleteItineraryDays(activePackage, booking, itineraryDays as ItineraryDayRecord[]);
 
@@ -305,22 +469,27 @@ export async function calculateBookingTotal(
     if (!day._id) {
       continue;
     }
-    const override = overrides.find((item: any) => item.dayId === day._id);
-    if (override) {
-      const selected = await getHotelByRoomSelection(ctx, override.hotelId, override.roomType);
-      hotelCost += selected?.roomRate ?? 0;
-      continue;
-    }
-
     const assignment = hotelAssignments.find((item: any) => item.itineraryDayId === day._id);
     if (!assignment) {
       continue;
     }
-    const selected = await getHotelByRoomSelection(ctx, assignment.hotelId, assignment.roomType);
-    hotelCost += (selected?.roomRate ?? 0) * (assignment.quantity ?? 1);
+
+    const defaultSelection = await getHotelByRoomSelection(ctx, assignment.hotelId, assignment.roomType);
+    const defaultDayCost = (defaultSelection?.roomRate ?? 0) * (assignment.quantity ?? 1);
+
+    const override = overrides.find((item: any) => item.dayId === day._id);
+    if (!override) {
+      continue;
+    }
+
+    const selected = await getHotelByRoomSelection(ctx, override.hotelId, override.roomType);
+    const selectedDayCost = (selected?.roomRate ?? 0) * (assignment.quantity ?? 1);
+    hotelDelta += selectedDayCost - defaultDayCost;
   }
 
-  return baseCost + vehicleCost + hotelCost;
+  const vehicleDelta = selectedVehicleCost - defaultVehicleCost;
+
+  return Math.max(baseCost + vehicleDelta + hotelDelta, 0);
 }
 
 export async function buildBookingItinerary(ctx: ReaderCtx, bookingId: Id<"bookings">) {
@@ -366,6 +535,8 @@ export async function buildBookingItinerary(ctx: ReaderCtx, bookingId: Id<"booki
         date: buildDateForDay(booking.startDate, day.dayNumber),
         title: day.title,
         description: day.description,
+        startDestination: day.startDestination ?? (day.dayNumber === 1 ? booking.departureCity : undefined),
+        endDestination: day.endDestination ?? day.overnightLocation,
         overnightLocation: day.overnightLocation,
         placesCovered: day.placesCovered,
         hotelAssignmentId: assignment?._id,
@@ -382,6 +553,121 @@ export async function buildBookingItinerary(ctx: ReaderCtx, bookingId: Id<"booki
     package: pkg,
     vehicle: selectedVehicle,
     vehicleOptions,
+    hotelOptions,
+    days
+  };
+}
+
+export async function buildPreviewItinerary(
+  ctx: ReaderCtx,
+  request: TripRequestArgs
+) {
+  const durationDays = calculateDurationDays(request.startDate, request.endDate);
+  const totalPersons = request.adults + request.children;
+  const matchedPackage = request.packageId
+    ? ((await ctx.db.get(request.packageId as Id<"packages">)) as PackageRecord | null)
+    : await resolveMatchingPackage(ctx, {
+        destination: request.destination,
+        departureCity: request.departureCity,
+        durationDays,
+        travelClass: request.travelClass,
+        totalPersons
+      });
+
+  if (!matchedPackage || !matchedPackage.isActive) {
+    return null;
+  }
+
+  const itineraryDays = (await ctx.db.query("itineraryDays").collect())
+    .filter((day: any) => day.packageId === matchedPackage._id)
+    .sort((a, b) => a.dayNumber - b.dayNumber) as ItineraryDayRecord[];
+  const completedDays = ensureCompleteItineraryDays(
+    matchedPackage,
+    {
+      _id: "preview-booking" as Id<"bookings">,
+      packageId: matchedPackage._id,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      adults: request.adults,
+      children: request.children,
+      roomType: request.roomType,
+      hotelOverrides: []
+    },
+    itineraryDays
+  );
+
+  const itineraryHotels = await ctx.db.query("itineraryHotels").collect();
+  const hotelOptions = await ctx.db.query("hotels").collect();
+  const { availableVehicles, selectedVehicle } = await resolveSelectedVehicle(
+    ctx,
+    matchedPackage,
+    totalPersons,
+    request.vehicleType,
+    Boolean(request.packageId)
+  );
+
+  const estimatedTotal = await calculateBookingTotal(
+    ctx,
+    {
+      _id: "preview-booking" as Id<"bookings">,
+      packageId: matchedPackage._id,
+      vehicleId: selectedVehicle?._id,
+      adults: request.adults,
+      children: request.children,
+      roomType: request.roomType,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      hotelOverrides: []
+    },
+    matchedPackage
+  );
+
+  const days = await Promise.all(
+    completedDays.map(async (day) => {
+      const assignment = day._id
+        ? itineraryHotels.find((item: any) => item.itineraryDayId === day._id)
+        : null;
+      const hotel = assignment?.hotelId ? await ctx.db.get(assignment.hotelId) : null;
+
+      return {
+        _id: day._id ?? `preview-day-${day.dayNumber}`,
+        dayNumber: day.dayNumber,
+        date: buildDateForDay(request.startDate, day.dayNumber),
+        title: day.title,
+        description: day.description,
+        startDestination: day.startDestination ?? (day.dayNumber === 1 ? request.departureCity : undefined),
+        endDestination: day.endDestination ?? day.overnightLocation,
+        overnightLocation: day.overnightLocation,
+        placesCovered: day.placesCovered,
+        hotelAssignmentId: assignment?._id,
+        hotel,
+        roomType: assignment?.roomType ?? request.roomType,
+        roomQuantity: assignment?.quantity ?? 1,
+        isGenerated: !day._id
+      };
+    })
+  );
+
+  return {
+    _id: "preview",
+    status: "pending" as const,
+    isPreview: true,
+    customerName: request.customerName,
+    customerEmail: request.customerEmail,
+    customerPhone: request.customerPhone,
+    specialRequests: request.specialRequests,
+    adults: request.adults,
+    children: request.children,
+    roomType: request.roomType,
+    travelClass: matchedPackage.travelClass,
+    departureCity: matchedPackage.departureCity,
+    startDate: request.startDate,
+    endDate: request.endDate,
+    totalPrice: estimatedTotal,
+    images: [],
+    package: matchedPackage,
+    vehicle: selectedVehicle,
+    vehicleOptions: availableVehicles,
     hotelOptions,
     days
   };

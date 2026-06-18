@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { mutation } from "./_generated/server";
+import { resolvePlaceImage } from "./lib/place_images";
 
 const vehicleDefinitions = [
   {
@@ -509,7 +510,7 @@ function createPlacesCovered(
 ) {
   return uniqueStops([previousStop, routeStop, overnightLocation]).map((name) => ({
     name,
-    image: coverImage,
+    image: resolvePlaceImage(name, coverImage),
   }));
 }
 
@@ -587,6 +588,8 @@ function createItineraryDays(definition: (typeof packageDefinitions)[number]) {
         previousStop,
         definition.departureCity,
       ),
+      startDestination: previousStop,
+      endDestination: overnightLocation,
       overnightLocation,
       placesCovered: createPlacesCovered(
         definition.coverImage,
@@ -700,6 +703,8 @@ export const seedDemoData = mutation({
               date: day.date,
               title: day.title,
               description: day.description,
+              startDestination: day.startDestination,
+              endDestination: day.endDestination,
               overnightLocation: day.overnightLocation,
               placesCovered: day.placesCovered,
             }),
@@ -710,6 +715,8 @@ export const seedDemoData = mutation({
               date: day.date,
               title: day.title,
               description: day.description,
+              startDestination: day.startDestination,
+              endDestination: day.endDestination,
               overnightLocation: day.overnightLocation,
               placesCovered: day.placesCovered,
             });

@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { useMutation } from "convex/react";
 import { ImagePlus, LoaderCircle, Trash2 } from "lucide-react";
 
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 
-type UploadCategory = "hotel" | "vehicle" | "booking";
+type UploadCategory = "hotel" | "vehicle" | "booking" | "package" | "place";
 
 export function AdminImageUploader({
   label,
@@ -22,8 +24,11 @@ export function AdminImageUploader({
   onChange: (images: string[]) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const finalizeUpload = useMutation(api.files.finalizeUpload);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const categoryLabel = category.replace(/^\w/, (character) => character.toUpperCase());
 
   return (
     <div className="space-y-3">
@@ -45,25 +50,38 @@ export function AdminImageUploader({
               return;
             }
 
-            const formData = new FormData();
-            formData.append("category", category);
-            selectedFiles.forEach((file) => formData.append("files", file));
-
             setIsUploading(true);
             setError(null);
 
             try {
-              const response = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-              });
+              const uploadedUrls: string[] = [];
 
-              const result = (await response.json()) as { urls?: string[]; error?: string };
-              if (!response.ok) {
-                throw new Error(result.error ?? "Upload failed.");
+              for (const file of selectedFiles) {
+                const postUrl = await generateUploadUrl({});
+                const response = await fetch(postUrl, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": file.type || "application/octet-stream",
+                  },
+                  body: file,
+                });
+
+                const result = (await response.json()) as {
+                  storageId?: string;
+                  error?: string;
+                };
+
+                if (!response.ok || !result.storageId) {
+                  throw new Error(result.error ?? "Upload failed.");
+                }
+
+                const fileUrl = await finalizeUpload({
+                  storageId: result.storageId as never,
+                });
+                uploadedUrls.push(fileUrl);
               }
 
-              onChange([...images, ...(result.urls ?? [])]);
+              onChange([...images, ...uploadedUrls]);
             } catch (uploadError) {
               setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
             } finally {
@@ -82,7 +100,7 @@ export function AdminImageUploader({
             </div>
             <div>
               <p className="font-medium text-slate-900">{isUploading ? "Uploading images..." : "Upload one or more images"}</p>
-              <p className="text-xs text-slate-500">JPG, PNG, WEBP and similar image formats are supported.</p>
+              <p className="text-xs text-slate-500">{categoryLabel} files are stored in Convex storage, not in the project filesystem.</p>
             </div>
           </div>
           <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={isUploading}>

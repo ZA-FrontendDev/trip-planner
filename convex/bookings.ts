@@ -1,10 +1,21 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-import { buildBookingItinerary, calculateBookingTotal, calculateDurationDays, ensureStoredPackageItinerary, getVehicleChoices, resolveMatchingPackage } from "./lib/trip";
+import {
+  buildBookingItinerary,
+  buildPreviewItinerary,
+  calculateBookingTotal,
+  calculateDurationDays,
+  ensureStoredPackageItinerary,
+  getAvailabilityHints as getTripAvailabilityHints,
+  resolveMatchingPackage,
+  resolveSelectedVehicle
+} from "./lib/trip";
 
 export const create = mutation({
   args: {
+    packageId: v.optional(v.id("packages")),
+    vehicleId: v.optional(v.id("vehicles")),
     customerName: v.string(),
     customerEmail: v.string(),
     customerPhone: v.string(),
@@ -17,34 +28,48 @@ export const create = mutation({
     roomType: v.string(),
     travelClass: v.string(),
     vehicleType: v.string(),
-    specialRequests: v.string()
+    specialRequests: v.string(),
+    hotelOverrides: v.optional(
+      v.array(
+        v.object({
+          dayId: v.id("itineraryDays"),
+          hotelId: v.id("hotels"),
+          roomType: v.string()
+        })
+      )
+    )
   },
   handler: async (ctx, args) => {
     const durationDays = calculateDurationDays(args.startDate, args.endDate);
     const totalPersons = args.adults + args.children;
-    const matchedPackage = await resolveMatchingPackage(ctx, {
-      destination: args.destination,
-      departureCity: args.departureCity,
-      durationDays,
-      travelClass: args.travelClass,
-      totalPersons
-    });
+    const matchedPackage = args.packageId
+      ? await ctx.db.get(args.packageId)
+      : await resolveMatchingPackage(ctx, {
+          destination: args.destination,
+          departureCity: args.departureCity,
+          durationDays,
+          travelClass: args.travelClass,
+          totalPersons
+        });
 
-    if (!matchedPackage) {
+    if (!matchedPackage || !matchedPackage.isActive) {
       throw new Error("No active package matches the selected trip criteria yet.");
     }
 
     await ensureStoredPackageItinerary(ctx, matchedPackage, args.startDate);
 
-    const availableVehicles = await getVehicleChoices(ctx, totalPersons);
-    const selectedVehicle =
-      availableVehicles.find((vehicle: any) => vehicle.name === args.vehicleType) ??
-      availableVehicles.find((vehicle: any) => vehicle._id === matchedPackage.defaultVehicleId) ??
-      availableVehicles[0];
+    const { selectedVehicle } = await resolveSelectedVehicle(
+      ctx,
+      matchedPackage,
+      totalPersons,
+      args.vehicleType
+    );
+    const finalVehicleId = args.vehicleId ?? selectedVehicle?._id;
+    const initialOverrides = args.hotelOverrides ?? [];
 
     const bookingId = await ctx.db.insert("bookings", {
       packageId: matchedPackage._id,
-      vehicleId: selectedVehicle?._id,
+      vehicleId: finalVehicleId,
       customerName: args.customerName,
       customerEmail: args.customerEmail,
       customerPhone: args.customerPhone,
@@ -60,7 +85,7 @@ export const create = mutation({
       status: "pending",
       createdAt: Date.now(),
       images: [],
-      hotelOverrides: []
+      hotelOverrides: initialOverrides
     });
 
     const booking = await ctx.db.get(bookingId);
@@ -70,6 +95,49 @@ export const create = mutation({
     });
 
     return bookingId;
+  }
+});
+
+export const previewItinerary = query({
+  args: {
+    packageId: v.optional(v.id("packages")),
+    customerName: v.string(),
+    customerEmail: v.string(),
+    customerPhone: v.string(),
+    departureCity: v.string(),
+    destination: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    adults: v.number(),
+    children: v.number(),
+    roomType: v.string(),
+    travelClass: v.string(),
+    vehicleType: v.string(),
+    specialRequests: v.string()
+  },
+  handler: async (ctx, args) => {
+    return await buildPreviewItinerary(ctx, args);
+  }
+});
+
+export const getAvailabilityHints = query({
+  args: {
+    destination: v.string(),
+    departureCity: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    adults: v.number(),
+    children: v.number(),
+    travelClass: v.string()
+  },
+  handler: async (ctx, args) => {
+    return await getTripAvailabilityHints(ctx, {
+      destination: args.destination,
+      departureCity: args.departureCity,
+      durationDays: calculateDurationDays(args.startDate, args.endDate),
+      travelClass: args.travelClass,
+      totalPersons: args.adults + args.children
+    });
   }
 });
 
