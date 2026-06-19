@@ -1,5 +1,6 @@
 import { Bell, CalendarDays, Search } from "lucide-react";
 
+import { AppLogo } from "@/components/shared/app-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -14,9 +15,7 @@ export function AdminShellHeader() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
               Admin panel
             </p>
-            <h1 className="display-font text-xl font-semibold text-foreground">
-              Pakistan Trip Planner
-            </h1>
+            <AppLogo href="/" imageClassName="h-9 w-auto" className="mt-1 inline-flex items-center" />
           </div>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

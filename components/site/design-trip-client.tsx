@@ -81,7 +81,7 @@ export function DesignTripClient() {
 
   return (
     <div className="bg-slate-100">
-      <BootstrapData />
+      <BootstrapData silent />
 
       <section className="overflow-hidden bg-[linear-gradient(135deg,#0a2e2b_0%,#0D7C6E_100%)] px-[5%] py-14 text-center">
         <p className="mb-2 text-[11px] font-bold uppercase tracking-[2px] text-amber-400">

@@ -3,18 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { AppLogo } from "@/components/shared/app-logo";
+
 export function Navbar() {
   const pathname = usePathname();
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl">
       <div className="mx-auto flex h-18 w-full max-w-350 items-center justify-between px-[5%]">
-        <Link
+        <AppLogo
           href="/"
-          className="display-font text-[22px] font-bold tracking-[-0.5px] text-primary"
-        >
-          Pak<span className="text-amber-500">Trips</span>
-        </Link>
+          priority
+          className="flex shrink-0 items-center"
+          imageClassName="h-10 w-auto"
+        />
 
         <nav className="hidden items-center gap-9 md:flex">
           <NavLink href="/" active={pathname === "/"}>

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, Compass, MountainSnow, Plus, ShieldCheck } from "lucide-react";
+import { ChevronUp, MountainSnow, Plus, ShieldCheck } from "lucide-react";
 
+import { AppLogo } from "@/components/shared/app-logo";
 import { adminNavigation } from "@/lib/admin-data";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -33,13 +34,16 @@ export function AdminSidebar() {
       <SidebarHeader className="p-3">
         <Link
           href="/admin"
-          className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-primary/10 px-3 py-3"
+          className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-primary/10 px-3 py-3 group-data-[collapsible=icon]:justify-center"
         >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-            <Compass className="size-5" />
-          </div>
+          <AppLogo
+            width={32}
+            height={32}
+            className="hidden group-data-[collapsible=icon]:flex"
+            imageClassName="h-8 w-8"
+          />
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold">Trip Planner Admin</p>
+            <AppLogo imageClassName="h-9 w-auto" />
             <p className="truncate text-xs text-sidebar-foreground/65">Operations cockpit</p>
           </div>
         </Link>

@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 
 type BootstrapDataProps = {
   compact?: boolean;
+  silent?: boolean;
 };
 
-export function BootstrapData({ compact = false }: BootstrapDataProps) {
+export function BootstrapData({ compact = false, silent = false }: BootstrapDataProps) {
   const status = useQuery(api.site.getBootstrapStatus);
   const seedData = useMutation(api.seed.seedDemoData);
   const [isSeeding, setIsSeeding] = useState(false);
@@ -46,6 +47,10 @@ export function BootstrapData({ compact = false }: BootstrapDataProps) {
   }, [isSeeding, seedData, status?.hasData]);
 
   if (status?.hasData) {
+    return null;
+  }
+
+  if (silent && !error) {
     return null;
   }
 

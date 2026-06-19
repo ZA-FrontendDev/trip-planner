@@ -1,6 +1,7 @@
 import { Compass, ShieldCheck } from "lucide-react";
 
 import { AdminLoginForm } from "@/components/admin/admin-login-form";
+import { AppLogo } from "@/components/shared/app-logo";
 
 export default async function AdminLoginPage({
   searchParams
@@ -40,6 +41,7 @@ export default async function AdminLoginPage({
         </section>
 
         <section className="rounded-[36px] border border-slate-200/70 bg-white/88 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:p-10">
+          <AppLogo href="/" className="mb-5 inline-flex items-center" imageClassName="h-11 w-auto" priority />
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Admin Login</p>
           <h2 className="display-font mt-3 text-3xl font-semibold text-slate-900">Access dashboard</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">

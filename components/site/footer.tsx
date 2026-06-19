@@ -1,14 +1,14 @@
 import Link from "next/link";
 
+import { AppLogo } from "@/components/shared/app-logo";
+
 export function Footer() {
   return (
     <footer className="mt-24 bg-slate-950 px-[5%] py-16 text-white/60">
       <div className="mx-auto max-w-300">
         <div className="mb-12 grid gap-10 md:grid-cols-[2fr_1fr_1fr_1fr]">
           <div>
-            <p className="display-font text-[22px] font-bold text-white">
-              Pak<span className="text-amber-500">Trips</span>
-            </p>
+            <AppLogo href="/" className="inline-flex items-center" imageClassName="h-11 w-auto" />
             <p className="mt-3 max-w-sm text-sm leading-7 text-white/55">
               Pakistan&apos;s most trusted trip planning platform for northern
               adventures. Curated itineraries, verified hotels, expert guides.

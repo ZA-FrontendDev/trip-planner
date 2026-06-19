@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className={`${sora.variable} ${jakarta.variable}`}>
+      <body suppressHydrationWarning className={`${sora.variable} ${jakarta.variable}`}>
         <TooltipProvider>
           <ConvexClientProvider>{children}</ConvexClientProvider>
         </TooltipProvider>
