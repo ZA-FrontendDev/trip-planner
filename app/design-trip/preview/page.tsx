@@ -8,7 +8,7 @@ type PreviewPageProps = {
 };
 
 function getValue(value: string | string[] | undefined, fallback = "") {
-  return Array.isArray(value) ? value[0] ?? fallback : value ?? fallback;
+  return Array.isArray(value) ? (value[0] ?? fallback) : (value ?? fallback);
 }
 
 export default async function PreviewPage({ searchParams }: PreviewPageProps) {
@@ -33,7 +33,7 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
   };
 
   return (
-    <main className="pb-8 pt-[72px]">
+    <main className="pb-8 pt-18">
       <Navbar />
       <section className="section-shell pt-8">
         <BookingItineraryClient previewRequest={previewRequest} />

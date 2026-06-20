@@ -4,7 +4,7 @@ import { AdminLoginForm } from "@/components/admin/admin-login-form";
 import { AppLogo } from "@/components/shared/app-logo";
 
 export default async function AdminLoginPage({
-  searchParams
+  searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
@@ -19,10 +19,13 @@ export default async function AdminLoginPage({
             Protected operations panel
           </div>
           <h1 className="display-font mt-8 max-w-xl text-4xl font-semibold leading-tight">
-            Secure access for package operations, itinerary control, and booking review.
+            Secure access for package operations, itinerary control, and booking
+            review.
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-white/78">
-            The admin dashboard is now restricted. Sign in with the configured admin account before viewing packages, hotels, vehicles, or bookings.
+            The admin dashboard is now restricted. Sign in with the configured
+            admin account before viewing packages, hotels, vehicles, or
+            bookings.
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -30,9 +33,12 @@ export default async function AdminLoginPage({
               "Package and itinerary management",
               "Hotel and vehicle inventory control",
               "Booking review and status handling",
-              "Credential-gated admin access"
+              "Credential-gated admin access",
             ].map((item) => (
-              <div key={item} className="rounded-[24px] border border-white/12 bg-white/8 p-4 backdrop-blur">
+              <div
+                key={item}
+                className="rounded-3xl border border-white/12 bg-white/8 p-4 backdrop-blur"
+              >
                 <ShieldCheck className="mb-3 size-5 text-amber-300" />
                 <p className="text-sm font-medium text-white/92">{item}</p>
               </div>
@@ -41,9 +47,18 @@ export default async function AdminLoginPage({
         </section>
 
         <section className="rounded-[36px] border border-slate-200/70 bg-white/88 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.08)] backdrop-blur sm:p-10">
-          <AppLogo href="/" className="mb-5 inline-flex items-center" imageClassName="h-11 w-auto" priority />
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Admin Login</p>
-          <h2 className="display-font mt-3 text-3xl font-semibold text-slate-900">Access dashboard</h2>
+          <AppLogo
+            href="/"
+            className="mb-5 inline-flex items-center"
+            imageClassName="h-11 w-auto"
+            priority
+          />
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+            Admin Login
+          </p>
+          <h2 className="display-font mt-3 text-3xl font-semibold text-slate-900">
+            Access dashboard
+          </h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             Enter the admin username and password to continue.
           </p>
